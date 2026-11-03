@@ -1,0 +1,43 @@
+.venv*/
+__pycache__/
+*/__pycache__/
+**/**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.db-*
+*.sqlite3
+*.sqlite3-*
+*.sqlite
+*.sqlite-*
+database_backups/
+.DS_Store
+
+# Temporary scratch scripts
+scratch*
+*.log
+
+# Local datasets and generated face images
+data/faces/*
+!data/faces/.gitkeep
+dataset_faces/
+
+# Trained model artifacts
+models/
+
+# Secrets and environment variables
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Database backups and local data
+attendance.backup*
+*.bak
+*.backup
+
+# Editor and operating system
+.vscode/
+.idea/
+Thumbs.db
