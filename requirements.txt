@@ -1,0 +1,10 @@
+streamlit==1.55.0
+opencv-python==4.13.0.92
+numpy==2.4.3
+pandas==2.3.3
+SQLAlchemy>=2.0.0
+plotly
+dlib
+face-recognition
+openpyxl
+setuptools<81

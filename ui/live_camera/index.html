@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; background: transparent; }
+      body { font-family: system-ui, sans-serif; color: #172b4d; }
+      .camera { width: 100%; max-width: 700px; margin: 0 auto; }
+      .viewport {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        border-radius: 10px;
+        background: #101820;
+      }
+      video, canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      video { object-fit: cover; }
+      canvas { pointer-events: none; }
+      .message {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        color: #fff;
+        text-align: center;
+        background: rgba(16, 24, 32, .78);
+      }
+      .message[hidden] { display: none; }
+      .fps {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 3px 8px;
+        border-radius: 12px;
+        color: #fff;
+        background: rgba(16, 24, 32, .72);
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="camera">
+      <div class="viewport">
+        <video autoplay muted playsinline></video>
+        <canvas></canvas>
+        <div class="fps">-- FPS</div>
+        <div class="message">Bật camera để xem hình ảnh trực tiếp.</div>
+      </div>
+    </div>
+    <script>
+      (() => {
+        const video = document.querySelector("video");
+        const canvas = document.querySelector("canvas");
+        const message = document.querySelector(".message");
+        const fpsBadge = document.querySelector(".fps");
+        const overlay = canvas.getContext("2d");
+        const captureCanvas = document.createElement("canvas");
+        const captureContext = captureCanvas.getContext("2d", { alpha: false });
+        const frameWidth = 640;
+        const frameHeight = 360;
+        let previewFrameWidth = frameWidth;
+        let previewFrameHeight = frameHeight;
+        const frameIntervalMs = 180;
+        let args = {};
+        let stream = null;
+        let activeCameraIndex = null;
+        let activeRestartKey = null;
+        let timer = null;
+        let frameId = 0;
+        let lastCaptureRequestId = 0;
+        let pendingCaptureRequestId = 0;
+        let cameraGeneration = 0;
+        let openingCamera = false;
+        let statusId = 0;
+        let overlays = [];
+        let presentedFrames = 0;
+        let fpsWindowStarted = performance.now();
+
+        function measureVideoFps(_now, metadata) {
+          presentedFrames += 1;
+          const elapsed = performance.now() - fpsWindowStarted;
+          if (elapsed >= 1000) {
+            fpsBadge.textContent =
+              `${Math.round(presentedFrames * 1000 / elapsed)} FPS`;
+            presentedFrames = 0;
+            fpsWindowStarted = performance.now();
+          }
+          if (video.srcObject) {
+            video.requestVideoFrameCallback(measureVideoFps);
+          }
+        }
+
+        function sendValue(value) {
+          window.parent.postMessage({
+            isStreamlitMessage: true,
+            type: "streamlit:setComponentValue",
+            value,
+            dataType: "json"
+          }, "*");
+        }
+
+        function sendStatus(status) {
+          statusId += 1;
+          sendValue({ kind: "status", status, status_id: statusId });
+        }
+
+        function setMessage(text, visible) {
+          message.textContent = text;
+          message.hidden = !visible;
+        }
+
+        function stopCamera() {
+          cameraGeneration += 1;
+          if (timer !== null) {
+            window.clearInterval(timer);
+            timer = null;
+          }
+          if (stream !== null) {
+            stream.getTracks().forEach((track) => track.stop());
+            stream = null;
+          }
+          video.srcObject = null;
+          activeCameraIndex = null;
+          activeRestartKey = null;
+          pendingCaptureRequestId = 0;
+          overlays = [];
+          overlay.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        async function openCamera(cameraIndex, restartKey) {
+          stopCamera();
+          const generation = cameraGeneration;
+          activeRestartKey = restartKey;
+          setMessage("Đang kết nối camera...", true);
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error("Trình duyệt không hỗ trợ truy cập camera.");
+          }
+
+          let selectedStream = null;
+          try {
+            const constraints = {
+              audio: false,
+              video: {
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                frameRate: { ideal: 30, max: 60 }
+              }
+            };
+            selectedStream = await navigator.mediaDevices.getUserMedia(constraints);
+            if (generation !== cameraGeneration) {
+              selectedStream.getTracks().forEach((track) => track.stop());
+              return;
+            }
+
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            if (generation !== cameraGeneration) {
+              selectedStream.getTracks().forEach((track) => track.stop());
+              return;
+            }
+            const cameras = devices.filter((device) => device.kind === "videoinput");
+            const selectedDevice = cameras[Math.max(0, Number(cameraIndex) || 0)];
+            if (!selectedDevice) {
+              throw new Error("Không tìm thấy camera đã chọn trên trình duyệt.");
+            }
+
+            const initialTrack = selectedStream.getVideoTracks()[0];
+            if (initialTrack && initialTrack.getSettings().deviceId !== selectedDevice.deviceId) {
+              selectedStream.getTracks().forEach((track) => track.stop());
+              selectedStream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: {
+                  deviceId: { exact: selectedDevice.deviceId },
+                  width: { ideal: 1280 },
+                  height: { ideal: 720 },
+                  frameRate: { ideal: 30, max: 60 }
+                }
+              });
+            }
+            if (generation !== cameraGeneration) {
+              selectedStream.getTracks().forEach((track) => track.stop());
+              return;
+            }
+
+            stream = selectedStream;
+            selectedStream = null;
+            activeCameraIndex = cameraIndex;
+            video.srcObject = stream;
+            await video.play();
+            presentedFrames = 0;
+            fpsWindowStarted = performance.now();
+            if (video.requestVideoFrameCallback) {
+              video.requestVideoFrameCallback(measureVideoFps);
+            }
+            setMessage("", false);
+            timer = window.setInterval(sendFrame, frameIntervalMs);
+            sendStatus("Camera đang hoạt động.");
+          } catch (error) {
+            if (selectedStream) {
+              selectedStream.getTracks().forEach((track) => track.stop());
+            }
+            throw error;
+          }
+        }
+
+        function drawOverlay() {
+          const bounds = canvas.getBoundingClientRect();
+          const dpr = window.devicePixelRatio || 1;
+          const width = Math.max(1, Math.round(bounds.width * dpr));
+          const height = Math.max(1, Math.round(bounds.height * dpr));
+          if (canvas.width !== width || canvas.height !== height) {
+            canvas.width = width;
+            canvas.height = height;
+          }
+
+          overlay.clearRect(0, 0, width, height);
+          const scaleX = width / previewFrameWidth;
+          const scaleY = height / previewFrameHeight;
+          overlays.forEach((face) => {
+            const x = Number(face.x) * scaleX;
+            const y = Number(face.y) * scaleY;
+            const boxWidth = Number(face.width) * scaleX;
+            const boxHeight = Number(face.height) * scaleY;
+            overlay.strokeStyle = face.color || "#00d084";
+            overlay.lineWidth = Math.max(2, 2 * dpr);
+            overlay.strokeRect(x, y, boxWidth, boxHeight);
+
+            if (face.label) {
+              const label = String(face.label);
+              const fontSize = Math.max(13, 15 * dpr);
+              overlay.font = `600 ${fontSize}px system-ui, sans-serif`;
+              const labelWidth = overlay.measureText(label).width + 12 * dpr;
+              const labelHeight = fontSize + 10 * dpr;
+              const labelY = y >= labelHeight ? y - labelHeight : y + boxHeight;
+              overlay.fillStyle = face.color || "#00d084";
+              overlay.fillRect(x, labelY, labelWidth, labelHeight);
+              overlay.fillStyle = "#fff";
+              overlay.fillText(label, x + 6 * dpr, labelY + fontSize);
+            }
+          });
+          window.requestAnimationFrame(drawOverlay);
+        }
+
+        function drawCroppedFrame(target, context, maxWidth, quality) {
+          if (!video.videoWidth || !video.videoHeight) return null;
+          const sourceWidth = video.videoWidth;
+          const sourceHeight = video.videoHeight;
+          const targetRatio = 16 / 9;
+          let cropWidth = sourceWidth;
+          let cropHeight = sourceHeight;
+          let sourceX = 0;
+          let sourceY = 0;
+          if (sourceWidth / sourceHeight > targetRatio) {
+            cropWidth = sourceHeight * targetRatio;
+            sourceX = (sourceWidth - cropWidth) / 2;
+          } else {
+            cropHeight = sourceWidth / targetRatio;
+            sourceY = (sourceHeight - cropHeight) / 2;
+          }
+          const outputWidth = Math.min(maxWidth, Math.round(cropWidth));
+          const outputHeight = Math.round(outputWidth / targetRatio);
+          target.width = outputWidth;
+          target.height = outputHeight;
+          if (target === captureCanvas) {
+            previewFrameWidth = outputWidth;
+            previewFrameHeight = outputHeight;
+          }
+          context.drawImage(
+            video,
+            sourceX, sourceY, cropWidth, cropHeight,
+            0, 0, outputWidth, outputHeight
+          );
+          return target.toDataURL("image/jpeg", quality);
+        }
+
+        function sendFrame() {
+          if (!stream || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+              pendingCaptureRequestId) return;
+          const image = drawCroppedFrame(
+            captureCanvas,
+            captureContext,
+            frameWidth,
+            0.72
+          );
+          if (!image) return;
+          frameId += 1;
+          sendValue({
+            kind: "frame",
+            frame_id: frameId,
+            image,
+            width: captureCanvas.width,
+            height: captureCanvas.height
+          });
+        }
+
+        function sendCapture(requestId) {
+          if (!stream || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+            sendStatus("Camera chưa sẵn sàng để chụp. Vui lòng thử lại.");
+            return;
+          }
+          pendingCaptureRequestId = requestId;
+          const photo = document.createElement("canvas");
+          photo.width = video.videoWidth;
+          photo.height = video.videoHeight;
+          photo.getContext("2d", { alpha: false }).drawImage(
+            video, 0, 0, photo.width, photo.height
+          );
+          sendValue({
+            kind: "capture",
+            capture_request_id: requestId,
+            image: photo.toDataURL("image/jpeg", 0.92),
+            width: photo.width,
+            height: photo.height
+          });
+        }
+
+        async function applyArgs(nextArgs) {
+          args = nextArgs || {};
+          overlays = Array.isArray(args.overlays) ? args.overlays : [];
+          const active = Boolean(args.active);
+          if (!active) {
+            stopCamera();
+            setMessage("Bật camera để xem hình ảnh trực tiếp.", true);
+            return;
+          }
+
+          if (!stream || activeCameraIndex !== args.camera_index ||
+              activeRestartKey !== args.restart_key) {
+            if (openingCamera) return;
+            openingCamera = true;
+            const requestedCameraIndex = args.camera_index;
+            const requestedRestartKey = args.restart_key;
+            let openFailed = false;
+            try {
+              await openCamera(requestedCameraIndex, requestedRestartKey);
+            } catch (error) {
+              openFailed = true;
+              stopCamera();
+              setMessage(error.message || "Không thể mở camera.", true);
+              sendStatus(error.message || "Không thể mở camera.");
+            } finally {
+              openingCamera = false;
+            }
+            if (args.active && !openFailed &&
+                (!stream ||
+                 args.camera_index !== requestedCameraIndex ||
+                 args.restart_key !== requestedRestartKey)) {
+              void applyArgs(args);
+            }
+            if (!stream) return;
+          }
+
+          const captureRequestId = Number(args.capture_request_id) || 0;
+          if (captureRequestId > lastCaptureRequestId) {
+            lastCaptureRequestId = captureRequestId;
+            sendCapture(captureRequestId);
+          }
+          if (pendingCaptureRequestId &&
+              Number(args.capture_ack_id) >= pendingCaptureRequestId) {
+            const acknowledgedRequest = pendingCaptureRequestId;
+            pendingCaptureRequestId = 0;
+            sendValue({
+              kind: "capture_ack",
+              capture_request_id: acknowledgedRequest
+            });
+          }
+        }
+
+        window.addEventListener("message", (event) => {
+          if (event.source !== window.parent || !event.data ||
+              event.data.type !== "streamlit:render") return;
+          void applyArgs(event.data.args);
+        });
+        window.addEventListener("pagehide", stopCamera);
+        window.addEventListener("beforeunload", stopCamera);
+        window.addEventListener("resize", () => {
+          canvas.width = 0;
+        });
+        window.parent.postMessage({
+          isStreamlitMessage: true,
+          type: "streamlit:componentReady",
+          apiVersion: 1
+        }, "*");
+        window.parent.postMessage({
+          isStreamlitMessage: true,
+          type: "streamlit:setFrameHeight",
+          height: 410
+        }, "*");
+        window.requestAnimationFrame(drawOverlay);
+      })();
+    </script>
+  </body>
+</html>
