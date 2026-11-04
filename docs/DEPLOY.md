@@ -52,7 +52,16 @@ Mặc định cổng chỉ mở trên `127.0.0.1:8501`. Muốn cho máy khác tr
 4. Đặt biến `SMART_ATTENDANCE_DATA_ROOT=/tmp/sa_data` (thư mục ghi được).
 5. Sau khi chạy: tạo lớp demo, đăng ký khuôn mặt của người đã đồng ý, kiểm tra điểm danh bằng ảnh.
 
-## 7. Biến môi trường
+## 7. Streamlit Community Cloud (bản demo, dữ liệu không thật)
+
+1. Đăng nhập share.streamlit.io bằng tài khoản GitHub sở hữu repo.
+2. **Create app → Deploy a public app from GitHub**: repo `trunggdeptrai/smart-attendance`, nhánh `main`, tệp chính `app.py`.
+3. **Advanced settings → Python version: 3.11** (bắt buộc – các phiên bản khác chưa kiểm thử với dlib/NumPy 2.2.6).
+4. Tệp `packages.txt` ở gốc repo cài `cmake`, `build-essential`… để biên dịch `dlib`; lần build đầu mất khoảng 15–30 phút.
+5. Giới hạn: ổ đĩa tạm (mất dữ liệu khi app ngủ/khởi động lại), tài nguyên hạn chế, app công khai, chưa có đăng nhập → **chỉ dùng dữ liệu demo**.
+6. Nếu build `dlib` thất bại do hết bộ nhớ: dùng Hugging Face Spaces (`deploy/huggingface/`) hoặc chạy cục bộ.
+
+## 8. Biến môi trường
 
 | Biến | Ý nghĩa |
 |---|---|
@@ -62,7 +71,7 @@ Mặc định cổng chỉ mở trên `127.0.0.1:8501`. Muốn cho máy khác tr
 
 Ứng dụng không dùng mật khẩu/API key nào. Không đưa tệp `.env` lên GitHub.
 
-## 8. Kiểm thử sau triển khai
+## 9. Kiểm thử sau triển khai
 
 - [ ] Trang tổng quan hiển thị, không lỗi.
 - [ ] Tạo lớp, học sinh thử; đăng ký 3 ảnh; huấn luyện.
