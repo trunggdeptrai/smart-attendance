@@ -6,7 +6,9 @@ import face_recognition
 
 # Doc toan bo anh trong data/faces, chuyen du lieu anh thanh face encodings
 # Tao mapping giua employee_code va list cac face encoding vectors (128D)
-DATASET_DIR = Path("data/faces")
+from core.paths import FACES_DIR
+
+DATASET_DIR = FACES_DIR
 VALID_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 

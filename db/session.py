@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 from db.models import Base
 
-DB_PATH = Path(__file__).resolve().parent.parent / "attendance.db"
+from core.paths import DB_PATH  # có thể ghi đè bằng biến môi trường SMART_ATTENDANCE_DB
 # Use sqlite backend
 SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_PATH}"
 

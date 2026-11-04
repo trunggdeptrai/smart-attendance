@@ -45,3 +45,48 @@ st.markdown(
     - Ứng dụng hiện chưa có đăng nhập/phân quyền giáo viên; chỉ triển khai trong môi trường được kiểm soát.
     """
 )
+
+st.divider()
+st.subheader("Sao lưu dữ liệu")
+st.caption(
+    "Bản sao lưu ZIP gồm cơ sở dữ liệu, ảnh mẫu khuôn mặt, mô hình và nhật ký nghiên cứu. "
+    "Đây là dữ liệu nhạy cảm: chỉ lưu ở nơi riêng tư, không đưa lên GitHub."
+)
+from core.backup import create_backup, list_backups, read_manifest  # noqa: E402
+
+if st.button("Tạo bản sao lưu ngay", type="primary"):
+    try:
+        backup_path = create_backup()
+        st.success(f"Đã tạo bản sao lưu: {backup_path.name}")
+    except (OSError, ValueError) as error:
+        st.error(f"Không thể tạo bản sao lưu: {error}")
+
+backups = list_backups()
+if backups:
+    rows = []
+    for path in backups[:20]:
+        try:
+            manifest = read_manifest(path)
+        except (OSError, ValueError, KeyError):
+            manifest = {}
+        rows.append({
+            "Tệp": path.name,
+            "Thời điểm": manifest.get("created_at", "—"),
+            "Ảnh mẫu": manifest.get("face_files", "—"),
+            "Tệp mô hình": manifest.get("model_files", "—"),
+            "Dung lượng (KB)": round(path.stat().st_size / 1024, 1),
+        })
+    st.dataframe(rows, hide_index=True, width="stretch")
+    chosen_backup = st.selectbox("Tải về bản sao lưu", backups[:20], format_func=lambda p: p.name)
+    st.download_button(
+        "Tải tệp sao lưu đã chọn",
+        data=chosen_backup.read_bytes(),
+        file_name=chosen_backup.name,
+        mime="application/zip",
+    )
+    st.caption(
+        "Khôi phục: dừng ứng dụng rồi chạy `python scripts/restore_backup.py <tệp.zip>`. "
+        "Công cụ luôn tạo bản sao lưu an toàn trước khi ghi đè."
+    )
+else:
+    st.info("Chưa có bản sao lưu nào trong thư mục backups/.")

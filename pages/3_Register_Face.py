@@ -14,6 +14,7 @@ from core.face_detect import detect_faces
 from core.face_recognizer import train_model
 from core.save_face import crop_and_resize_face, save_face_image
 from streamlit.runtime.media_file_storage import MediaFileStorageError
+from core.paths import FACES_DIR
 from db.database import get_students
 
 release_inactive_cameras(st.session_state, "register_face")
@@ -39,7 +40,7 @@ student_code = st.selectbox(
 if student_code is None:
     st.error("Hãy chọn học sinh cần đăng ký khuôn mặt.")
     st.stop()
-face_dir = Path(__file__).resolve().parent.parent / "data" / "faces" / student_code
+face_dir = FACES_DIR / student_code
 
 
 def _count_saved_faces(directory):
@@ -354,3 +355,36 @@ if st.button("Huấn luyện mô hình", type="primary"):
         )
     except (FileNotFoundError, ValueError, OSError) as error:
         st.error(f"Không thể huấn luyện mô hình: {error}")
+
+st.divider()
+st.subheader("Xóa dữ liệu khuôn mặt của học sinh")
+st.caption(
+    "Dùng khi học sinh/phụ huynh rút lại sự đồng ý hoặc dữ liệu không còn cần thiết. "
+    "Thao tác xóa vĩnh viễn ảnh mẫu của học sinh đang chọn; hồ sơ và lịch sử điểm danh được giữ nguyên. "
+    "Sau khi xóa cần huấn luyện lại mô hình để loại bỏ vector đặc trưng khỏi mô hình."
+)
+confirm_delete = st.checkbox(
+    f"Tôi xác nhận xóa toàn bộ ảnh mẫu của {student_code}",
+    key=f"confirm_delete_faces_{student_code}",
+)
+if st.button("Xóa ảnh mẫu và huấn luyện lại", disabled=not confirm_delete):
+    from core.save_face import delete_employee_folder
+
+    try:
+        removed = _count_saved_faces(face_dir)
+        delete_employee_folder(student_code)
+        st.success(f"Đã xóa {removed} ảnh mẫu của {student_code}.")
+        try:
+            result = train_model()
+            st.info(
+                f"Đã huấn luyện lại: {result['num_images']} ảnh, {result['num_people']} học sinh."
+            )
+        except ValueError:
+            from core.face_recognizer import remove_model_files
+
+            remove_model_files()
+            st.info("Không còn ảnh mẫu hợp lệ; đã xóa tệp mô hình cũ.")
+        except (FileNotFoundError, OSError) as error:
+            st.warning(f"Đã xóa ảnh nhưng chưa huấn luyện lại được ({error}).")
+    except OSError as error:
+        st.error(f"Không thể xóa ảnh mẫu: {error}")

@@ -1,5 +1,5 @@
-version: '3.8'
-
+# Truoc khi chay lan dau: tao san tep attendance.db rong (xem docs/DEPLOY.md)
+# de Docker khong tao nham thanh thu muc khi mount.
 services:
   attendance-system:
     build:
@@ -20,6 +20,9 @@ services:
       - ./models:/app/models
       - ./attendance.db:/app/attendance.db
       - ./database_backups:/app/database_backups
+      - ./backups:/app/backups
+      - ./research_logs:/app/research_logs
+      - ./research_results:/app/research_results
     # Lưu ý: Nếu chạy trên Linux có webcam cắm trực tiếp cổng USB, bỏ comment dòng dưới:
     # devices:
     #   - "/dev/video0:/dev/video0"

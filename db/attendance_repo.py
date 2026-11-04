@@ -233,6 +233,8 @@ def record_student_attendance(
             date_value = date.fromisoformat(date_value).isoformat()
         except ValueError as error:
             raise ValueError("Ngày điểm danh không hợp lệ.") from error
+        if date.fromisoformat(date_value) > date.today():
+            raise ValueError("Không thể ghi nhận điểm danh cho ngày trong tương lai.")
         normalized_confidence = None if confidence is None else float(confidence)
         if normalized_confidence is not None and not 0 <= normalized_confidence <= 1:
             raise ValueError("Giá trị nhận diện không hợp lệ.")

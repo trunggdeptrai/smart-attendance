@@ -37,3 +37,10 @@ attendance.backup*
 .vscode/
 .idea/
 Thumbs.db
+# Du lieu sinh ra khi chay (KHONG dua len GitHub: co the chua du lieu ca nhan)
+backups/
+research_logs/
+research_results/
+data/eval/
+*.zip
+.claude/

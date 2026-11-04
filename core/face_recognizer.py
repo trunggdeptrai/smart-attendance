@@ -2,6 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 import json
 import pickle
+import time
 
 import cv2
 import numpy as np
@@ -13,14 +14,15 @@ from core.face_dataset import (
 )
 from db.database import get_employee_codes
 
-MODEL_DIR = Path("models")
+from core.paths import MODEL_DIR
 ENCODINGS_PATH = MODEL_DIR / "face_encodings.pkl"
 LABEL_MAP_PATH = MODEL_DIR / "label_map.json"
 MODEL_METADATA_PATH = MODEL_DIR / "model_metadata.json"
 
-# Nguong nhan dien: distance <= threshold thi la match
-# Sau khi retrain, khoang cach giua cac nguoi khac nhau deu >= 0.4917
-# Thiet lap nguong an toan 0.48 de triet tieu 100% rui ro nhan nham
+# Nguong nhan dien: distance <= threshold thi la match.
+# Ghi chu kiem chung: gia tri 0.48 duoc chon thu cong tren tap anh mau ban dau;
+# CHUA duoc kiem chung bang thuc nghiem co he thong. Dung research/evaluate_recognition.py
+# de do ty le nhan dung / nhan nham theo tung nguong truoc khi ket luan.
 DEFAULT_MATCH_THRESHOLD = 0.48
 STRICT_MATCH_THRESHOLD = 0.44
 SINGLE_PERSON_THRESHOLD = 0.50
@@ -226,6 +228,17 @@ def train_model():
     }
 
 
+def remove_model_files():
+    """Xóa tệp mô hình (dùng khi không còn ảnh mẫu nào, tránh giữ lại vector cũ)."""
+    removed = []
+    for path in (ENCODINGS_PATH, LABEL_MAP_PATH, MODEL_METADATA_PATH):
+        if path.exists():
+            path.unlink()
+            removed.append(path.name)
+    clear_model_cache()
+    return removed
+
+
 def load_model():
     if not ENCODINGS_PATH.exists():
         raise FileNotFoundError("Model file not found. Please train model first.")
@@ -258,80 +271,77 @@ def _apply_camera_profile(match_threshold, metadata, camera_index):
     return adjusted_threshold, camera_profile
 
 
-def predict_face(face_image, camera_index=None):
+# Chiến lược phân loại hỗ trợ (dùng cho thực nghiệm so sánh):
+# - "weighted_knn": thuật toán đang dùng trong ứng dụng (mặc định).
+# - "nearest_1nn": đối chứng — láng giềng gần nhất, một ngưỡng cố định,
+#   tương đương cách dùng phổ biến face_recognition.compare_faces (tolerance 0.6).
+STRATEGY_WEIGHTED_KNN = "weighted_knn"
+STRATEGY_NEAREST_1NN = "nearest_1nn"
+BASELINE_TOLERANCE = 0.6
+STD_MIN_CONTRAST = 8.0
+
+
+def _unknown_result(match_threshold=DEFAULT_MATCH_THRESHOLD, reason="", **extra):
+    result = {
+        "predicted_code": "Unknown",
+        "display_code": "Unknown",
+        "confidence": 1.0,
+        "match_threshold": match_threshold,
+        "base_match_threshold": match_threshold,
+        "is_match": False,
+        "camera_profile": None,
+        "reject_reason": reason,
+    }
+    result.update(extra)
+    return result
+
+
+def classify_encoding(
+    face_encoding,
+    known_encodings,
+    known_labels,
+    label_to_code,
+    metadata,
+    camera_index=None,
+    strategy=STRATEGY_WEIGHTED_KNN,
+    threshold_override=None,
+):
+    """Phân loại một vector đặc trưng 128 chiều.
+
+    Hàm thuần (không đọc tệp, không gọi camera) để có thể kiểm thử và chạy
+    thực nghiệm so sánh giữa các chiến lược với cùng dữ liệu đầu vào.
+
+    ``confidence`` trong kết quả là KHOẢNG CÁCH Euclid nhỏ nhất (càng nhỏ càng
+    giống), giữ tên cũ để tương thích với giao diện và cơ sở dữ liệu.
     """
-    Nhận diện khuôn mặt bằng cách so sánh face encoding 128D.
-    face_image: ảnh BGR của khuôn mặt đã crop.
-    Trả về dict tương thích với giao diện cũ.
-    """
-    known_encodings, known_labels, label_to_code, metadata = load_model()
+    known_encodings = np.asarray(known_encodings, dtype=np.float64)
     if known_encodings.size == 0:
-        return {
-            "predicted_code": "Unknown",
-            "display_code": "Unknown",
-            "confidence": 1.0,
-            "match_threshold": DEFAULT_MATCH_THRESHOLD,
-            "base_match_threshold": DEFAULT_MATCH_THRESHOLD,
-            "is_match": False,
-            "camera_profile": None,
-        }
+        return _unknown_result(reason="empty_model")
 
-    # Convert BGR to RGB
-    if len(face_image.shape) == 2:
-        rgb_image = cv2.cvtColor(face_image, cv2.COLOR_GRAY2RGB)
-    else:
-        rgb_image = cv2.cvtColor(face_image, cv2.COLOR_BGR2RGB)
-
-    # Kiem tra anh dau vao: neu anh qua dong nhat (den kit, trang xoa hoac nhieu deu), do lech chuan pixel rat thap
-    # Mat nguoi thuc te luon co do tuong phang mat/mui/mieng voi std > 10.0
-    gray_img = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
-    if float(np.std(gray_img)) < 8.0:
-        return {
-            "predicted_code": "Unknown",
-            "display_code": "Unknown",
-            "confidence": 1.0,
-            "match_threshold": DEFAULT_MATCH_THRESHOLD,
-            "base_match_threshold": DEFAULT_MATCH_THRESHOLD,
-            "is_match": False,
-            "camera_profile": None,
-        }
-
-    # Vì ảnh face_image truyền vào đã được crop chính xác bởi Haar Cascade trước đó,
-    # ta bỏ qua bước quét HOG dư thừa (giúp tiết kiệm ~20-30ms mỗi frame) và dùng luôn toàn bộ khung ảnh crop.
-    face_locations = [(0, rgb_image.shape[1], rgb_image.shape[0], 0)]
-
-    # Get encoding for the face
-    face_encs = face_recognition.face_encodings(rgb_image, face_locations)
-
-    if len(face_encs) == 0:
-        return {
-            "predicted_code": "Unknown",
-            "display_code": "Unknown",
-            "confidence": 1.0,
-            "match_threshold": DEFAULT_MATCH_THRESHOLD,
-            "base_match_threshold": DEFAULT_MATCH_THRESHOLD,
-            "is_match": False,
-            "camera_profile": None,
-        }
-
-    face_encoding = face_encs[0]
-
-    # So sánh với tất cả encodings đã biết
-    distances = face_recognition.face_distance(
-        known_encodings,
-        face_encoding
-    )
-
+    distances = np.linalg.norm(known_encodings - np.asarray(face_encoding), axis=1)
     if len(distances) == 0:
+        return _unknown_result(reason="empty_model")
+
+    if strategy == STRATEGY_NEAREST_1NN:
+        best_index = int(np.argmin(distances))
+        best_distance = float(distances[best_index])
+        best_code = label_to_code.get(known_labels[best_index], "Unknown")
+        threshold = float(BASELINE_TOLERANCE if threshold_override is None else threshold_override)
+        is_match = best_code != "Unknown" and best_distance <= threshold
         return {
-            "predicted_code": "Unknown",
-            "display_code": "Unknown",
-            "confidence": 1.0,
-            "match_threshold": DEFAULT_MATCH_THRESHOLD,
-            "base_match_threshold": DEFAULT_MATCH_THRESHOLD,
-            "is_match": False,
+            "predicted_code": best_code,
+            "display_code": best_code if is_match else "Unknown",
+            "confidence": best_distance,
+            "match_threshold": threshold,
+            "base_match_threshold": threshold,
+            "is_match": is_match,
             "camera_profile": None,
+            "reject_reason": "" if is_match else "above_threshold",
+            "strategy": strategy,
         }
+
+    if strategy != STRATEGY_WEIGHTED_KNN:
+        raise ValueError(f"Chiến lược phân loại không hợp lệ: {strategy}")
 
     # === THUAT TOAN PHAN LOAI DISTANCE-WEIGHTED K-NN & MARGIN GAP CHECK ===
     num_samples = len(distances)
@@ -343,12 +353,10 @@ def predict_face(face_image, camera_index=None):
     top_k_labels = [known_labels[idx] for idx in top_k_indices]
     top_k_codes = [label_to_code.get(lbl, "Unknown") for lbl in top_k_labels]
 
-    # Khoang cach nho nhat trong toan bo database
     best_distance = float(top_k_distances[0])
     best_candidate_code = top_k_codes[0]
 
-    # 2. Tinh tong trong so khoang cach cho tung ung vien trong Top-K
-    # Cong thuc: weight = 1 / (distance + 1e-5)
+    # 2. Tong trong so: weight = 1 / (distance + 1e-5)
     code_weights = {}
     code_vote_counts = {}
     for code, dist in zip(top_k_codes, top_k_distances):
@@ -356,10 +364,9 @@ def predict_face(face_image, camera_index=None):
         code_weights[code] = code_weights.get(code, 0.0) + w
         code_vote_counts[code] = code_vote_counts.get(code, 0) + 1
 
-    # Ung vien co tong trong so cao nhat
     winning_code = max(code_weights.keys(), key=lambda c: code_weights[c])
 
-    # 3. Kiem tra nguong nguong tin cay (Threshold)
+    # 3. Nguong rieng cho tung hoc sinh (hieu chinh khi huan luyen) + ho so camera
     default_threshold = float(metadata.get("default_threshold", DEFAULT_MATCH_THRESHOLD))
     code_thresholds = metadata.get("code_thresholds", {})
     base_match_threshold = float(code_thresholds.get(winning_code, default_threshold))
@@ -369,9 +376,10 @@ def predict_face(face_image, camera_index=None):
         metadata,
         camera_index,
     )
+    if threshold_override is not None:
+        match_threshold = float(threshold_override)
 
-    # 4. Kiem tra Margin Gap Check (Do chenh lech khoang cach voi nguoi dung thu hai)
-    # Neu co ung vien khac nguoi xuat hien trong top K, khoang cach giua ho phai du xa
+    # 4. Margin Gap Check: nguoi thu hai phai cach xa du MARGIN_GAP_THRESHOLD
     margin_satisfied = True
     other_code_distances = [
         dist for code, dist in zip(top_k_codes, top_k_distances)
@@ -379,24 +387,32 @@ def predict_face(face_image, camera_index=None):
     ]
     if other_code_distances:
         second_best_dist = min(other_code_distances)
-        # Neu khoang cach giua nguoi gan nhat va nguoi thu 2 qua gan (< MARGIN_GAP_THRESHOLD)
-        # He thong tu choi nhan dien de tranh bat nham nguoi
         if (second_best_dist - best_distance) < MARGIN_GAP_THRESHOLD:
             margin_satisfied = False
 
-    # 5. Kiem tra da so phieu (Majority vote)
-    # Trong top K, ung vien chien thang phai chiem it nhat (K // 2 + 1) phieu
-    # Doi voi K=3, can it nhat 2/3 phieu. Neu K=1 thi can 1/1.
+    # 5. Da so phieu: can it nhat K // 2 + 1 phieu (K=3 -> 2/3)
     min_required_votes = (effective_k // 2) + 1
     has_majority = code_vote_counts.get(winning_code, 0) >= min_required_votes
 
     # 6. Phan quyet cuoi cung
+    within_threshold = best_distance <= match_threshold
     is_match = (
         winning_code != "Unknown"
-        and best_distance <= match_threshold
+        and within_threshold
         and margin_satisfied
         and has_majority
     )
+
+    if is_match:
+        reject_reason = ""
+    elif not within_threshold:
+        reject_reason = "above_threshold"
+    elif not margin_satisfied:
+        reject_reason = "margin_gap"
+    elif not has_majority:
+        reject_reason = "no_majority"
+    else:
+        reject_reason = "unknown_label"
 
     predicted_code = winning_code if (has_majority or margin_satisfied) else best_candidate_code
 
@@ -408,4 +424,77 @@ def predict_face(face_image, camera_index=None):
         "base_match_threshold": base_match_threshold,
         "is_match": is_match,
         "camera_profile": camera_profile,
+        "reject_reason": reject_reason,
+        "strategy": strategy,
     }
+
+
+def encode_face_crop(face_image, locate_mode="full_crop"):
+    """Tạo vector đặc trưng 128D từ ảnh khuôn mặt đã cắt (BGR hoặc xám).
+
+    locate_mode:
+    - "full_crop": dùng toàn bộ khung ảnh cắt làm vị trí khuôn mặt (mặc định
+      của ứng dụng, nhanh hơn vì bỏ qua bước dò HOG).
+    - "hog_redetect": dò lại khuôn mặt bằng HOG trong ảnh cắt (giống bước huấn
+      luyện); nếu không thấy thì quay về toàn khung. Dùng cho thực nghiệm.
+    Trả về (encoding hoặc None, lý do từ chối).
+    """
+    if face_image is None or getattr(face_image, "size", 0) == 0:
+        return None, "invalid_image"
+    if len(face_image.shape) == 2:
+        rgb_image = cv2.cvtColor(face_image, cv2.COLOR_GRAY2RGB)
+    else:
+        rgb_image = cv2.cvtColor(face_image, cv2.COLOR_BGR2RGB)
+
+    # Anh qua dong nhat (den, trang, nhieu deu) -> tu choi som
+    gray_img = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+    if float(np.std(gray_img)) < STD_MIN_CONTRAST:
+        return None, "low_contrast"
+
+    face_locations = [(0, rgb_image.shape[1], rgb_image.shape[0], 0)]
+    if locate_mode == "hog_redetect":
+        detected = face_recognition.face_locations(rgb_image, model="hog")
+        if detected:
+            face_locations = [detected[0]]
+    elif locate_mode != "full_crop":
+        raise ValueError(f"Chế độ định vị không hợp lệ: {locate_mode}")
+
+    face_encs = face_recognition.face_encodings(rgb_image, face_locations)
+    if len(face_encs) == 0:
+        return None, "no_encoding"
+    return face_encs[0], ""
+
+
+def predict_face(
+    face_image,
+    camera_index=None,
+    strategy=STRATEGY_WEIGHTED_KNN,
+    locate_mode="full_crop",
+    threshold_override=None,
+):
+    """
+    Nhận diện khuôn mặt bằng cách so sánh face encoding 128D.
+    face_image: ảnh BGR của khuôn mặt đã crop.
+    Trả về dict tương thích với giao diện cũ, bổ sung:
+    - latency_ms: thời gian mã hóa + so khớp (mili giây)
+    - reject_reason: lý do trả về Unknown (rỗng nếu khớp)
+    """
+    started = time.perf_counter()
+    known_encodings, known_labels, label_to_code, metadata = load_model()
+
+    face_encoding, reason = encode_face_crop(face_image, locate_mode=locate_mode)
+    if face_encoding is None:
+        result = _unknown_result(reason=reason)
+    else:
+        result = classify_encoding(
+            face_encoding,
+            known_encodings,
+            known_labels,
+            label_to_code,
+            metadata,
+            camera_index=camera_index,
+            strategy=strategy,
+            threshold_override=threshold_override,
+        )
+    result["latency_ms"] = round((time.perf_counter() - started) * 1000.0, 2)
+    return result

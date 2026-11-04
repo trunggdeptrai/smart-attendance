@@ -4,7 +4,9 @@ import shutil
 import cv2
 
 # Cat anh, chinh kich thuoc va luu vao dung o cung
-DATASET_DIR = Path("data/faces")
+from core.paths import FACES_DIR
+
+DATASET_DIR = FACES_DIR
 FACE_SIZE = (200, 200)
 FACE_PADDING_RATIO = 0.18
 VALID_EXTENSIONS = {".jpg", ".jpeg", ".png"}

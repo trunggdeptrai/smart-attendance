@@ -14,6 +14,7 @@ from core.camera_stream import (
 from core.live_camera import decode_camera_image, live_camera
 from core.face_detect import detect_faces
 from core.face_recognizer import predict_face
+from core.research_log import log_teacher_decision, logged_predictor
 from core.save_face import crop_and_resize_face
 from streamlit.runtime.media_file_storage import MediaFileStorageError
 from db.attendance_repo import (
@@ -49,6 +50,7 @@ with date_col:
     attendance_date = st.date_input(
         "Ngày điểm danh",
         value=date.today(),
+        max_value=date.today(),
         format="DD/MM/YYYY",
     )
 with session_col:
@@ -288,7 +290,7 @@ if source == "Camera trực tiếp":
                         frame,
                         faces_list,
                         crop_and_resize_face,
-                        predict_face,
+                        logged_predictor(predict_face, "attendance_live"),
                         camera_index=selected_camera_index,
                     )
                     st.session_state["attendance_prediction"] = prediction
@@ -406,6 +408,15 @@ if source == "Camera trực tiếp":
                     live_recorded_events.add(
                         (matched_student.student_code, event_to_record)
                     )
+                    log_teacher_decision(
+                        "attendance_live",
+                        "confirm",
+                        attendance_type=event_to_record,
+                        method="face",
+                        predicted_code=matched_student.student_code,
+                        final_code=matched_student.student_code,
+                        distance=prediction.get("confidence"),
+                    )
                     st.success(
                         f"Đã ghi nhận điểm danh {event_to_record_label} cho "
                         f"{matched_student.student_code} · "
@@ -485,7 +496,9 @@ if analyze_submitted and image_bytes is not None:
             for face_box in faces:
                 try:
                     face_image = crop_and_resize_face(image, face_box)
-                    prediction = predict_face(face_image)
+                    prediction = logged_predictor(
+                        predict_face, "attendance_photo"
+                    )(face_image)
                 except FileNotFoundError as error:
                     st.error(f"Chưa có mô hình nhận diện. {error}")
                     candidates = []
@@ -582,6 +595,14 @@ if candidates is not None:
                         selected_class_id,
                         corrected_status,
                     )
+                    log_teacher_decision(
+                        "attendance_correction",
+                        "correct",
+                        method=str(getattr(existing_record, "attendance_method", "")),
+                        predicted_code=existing_record.student_code,
+                        final_code=corrected_code,
+                        note=f"{existing_status} -> {corrected_status}",
+                    )
                     daily_records = load_daily_records()
                     st.success("Đã cập nhật kết quả điểm danh.")
                 except ValueError as error:
@@ -641,6 +662,15 @@ if candidates is not None:
                         confidence=item["distance"],
                         attendance_type=attendance_event,
                     )
+                    log_teacher_decision(
+                        "attendance_photo",
+                        "confirm",
+                        attendance_type=attendance_event,
+                        method="face",
+                        predicted_code=row.student_code,
+                        final_code=row.student_code,
+                        distance=item["distance"],
+                    )
                     daily_records = load_daily_records()
                     st.success(f"Đã xác nhận điểm danh {row.full_name}.")
                 except ValueError as error:
@@ -684,6 +714,14 @@ with st.expander("Điểm danh thủ công hoặc ghi nhận vắng mặt"):
                 manual_status,
                 method="manual",
                 attendance_type=manual_event,
+            )
+            log_teacher_decision(
+                "attendance_manual",
+                "manual",
+                attendance_type=manual_event,
+                method="manual",
+                final_code=student.student_code,
+                note=manual_status,
             )
             daily_records = load_daily_records()
             st.success(f"Đã lưu trạng thái cho {student.full_name}.")

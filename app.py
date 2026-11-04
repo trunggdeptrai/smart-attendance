@@ -32,6 +32,9 @@ pages = {
         st.Page("pages/5_History.py", title="Lịch sử điểm danh", icon=":material/history:"),
         st.Page("pages/9_Attendance_Report.py", title="Báo cáo chuyên cần", icon=":material/analytics:"),
     ],
+    "NGHIÊN CỨU": [
+        st.Page("pages/12_Research.py", title="Đánh giá thực nghiệm", icon=":material/science:"),
+    ],
     "HỆ THỐNG": [
         st.Page("pages/10_Settings.py", title="Cài đặt", icon=":material/settings:"),
         st.Page("pages/11_Guide.py", title="Hướng dẫn sử dụng", icon=":material/help:"),
