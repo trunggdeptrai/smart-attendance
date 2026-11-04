@@ -54,6 +54,8 @@ Mặc định cổng chỉ mở trên `127.0.0.1:8501`. Muốn cho máy khác tr
 
 ## 7. Streamlit Community Cloud (bản demo, dữ liệu không thật)
 
+**Đã triển khai ngày 04/11/2026:** https://smart-attendance-demo.streamlit.app (nhánh `main`, Python 3.11, tự cập nhật khi đẩy mã lên `main`). Không đưa đường dẫn này vào báo cáo IIIa/IIIb/poster (công văn cấm link).
+
 1. Đăng nhập share.streamlit.io bằng tài khoản GitHub sở hữu repo.
 2. **Create app → Deploy a public app from GitHub**: repo `trunggdeptrai/smart-attendance`, nhánh `main`, tệp chính `app.py`.
 3. **Advanced settings → Python version: 3.11** (bắt buộc – các phiên bản khác chưa kiểm thử với dlib/NumPy 2.2.6).
