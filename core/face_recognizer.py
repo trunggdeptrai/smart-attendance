@@ -1,5 +1,4 @@
 from functools import lru_cache
-from pathlib import Path
 import json
 import pickle
 import time
@@ -12,9 +11,10 @@ from core.face_dataset import (
     count_images_per_employee,
     load_training_data,
 )
+from core.paths import MODELS_DIR
 from db.database import get_employee_codes
 
-from core.paths import MODEL_DIR
+MODEL_DIR = MODELS_DIR
 ENCODINGS_PATH = MODEL_DIR / "face_encodings.pkl"
 LABEL_MAP_PATH = MODEL_DIR / "label_map.json"
 MODEL_METADATA_PATH = MODEL_DIR / "model_metadata.json"
@@ -182,15 +182,18 @@ def _build_model_metadata(known_encodings, known_labels, label_to_code, images_p
 
 def train_model():
     valid_employee_codes = get_employee_codes()
+    if not valid_employee_codes:
+        raise ValueError("Chưa có học sinh trong cơ sở dữ liệu để huấn luyện mô hình.")
+
     encodings, labels, label_to_code, code_to_label = load_training_data(
         valid_employee_codes=valid_employee_codes,
     )
 
-    if len(valid_employee_codes) == 0:
-        raise ValueError("No employees found in database.")
-
     if len(encodings) == 0:
-        raise ValueError("No training images found for valid employees in dataset.")
+        raise ValueError(
+            "Chưa có ảnh khuôn mặt hợp lệ cho học sinh đang học. "
+            "Hãy đăng ký ảnh trước khi huấn luyện."
+        )
 
     ensure_model_dir()
 

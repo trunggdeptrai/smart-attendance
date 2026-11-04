@@ -221,6 +221,9 @@ def test_face_detection_scaled_coordinates():
     frame = np.zeros((480, 640, 3), dtype=np.uint8)
 
     class MockCascade:
+        def empty(self):
+            return False
+
         def detectMultiScale(self, _gray, **kwargs):
             self.kwargs = kwargs
             return np.array([[75, 45, 90, 90]])

@@ -1,4 +1,4 @@
-.venv/
+.venv*/
 __pycache__/
 */__pycache__/
 **/**/__pycache__/
@@ -6,7 +6,11 @@ __pycache__/
 *.pyo
 *.pyd
 *.db
+*.db-*
 *.sqlite3
+*.sqlite3-*
+*.sqlite
+*.sqlite-*
 database_backups/
 .DS_Store
 

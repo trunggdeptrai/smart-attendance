@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import streamlit as st
 
+from core.dataframes import records_to_dataframe
 from core.camera_stream import (
     clear_prediction_cache,
     get_or_update_prediction,
@@ -528,20 +529,29 @@ candidates = st.session_state.get("attendance_candidates")
 if candidates is not None:
     st.subheader("Kết quả phân tích")
     st.dataframe(
-        [
-            {
-                "Mã học sinh": item["student_code"] or "—",
-                "Họ và tên": item["name"],
-                "Lớp": item["class_name"],
-                "Khoảng cách nhận diện": round(item["distance"], 3),
-                "Kết quả": "Khớp trong lớp" if (
-                    item["student_code"] in student_by_code
-                ) else (
-                    "Khớp học sinh lớp khác" if item["match"] else "Chưa nhận diện"
-                ),
-            }
-            for item in candidates
-        ],
+        records_to_dataframe(
+            [
+                {
+                    "Mã học sinh": item["student_code"] or "—",
+                    "Họ và tên": item["name"],
+                    "Lớp": item["class_name"],
+                    "Khoảng cách nhận diện": round(item["distance"], 3),
+                    "Kết quả": "Khớp trong lớp" if (
+                        item["student_code"] in student_by_code
+                    ) else (
+                        "Khớp học sinh lớp khác" if item["match"] else "Chưa nhận diện"
+                    ),
+                }
+                for item in candidates
+            ],
+            [
+                "Mã học sinh",
+                "Họ và tên",
+                "Lớp",
+                "Khoảng cách nhận diện",
+                "Kết quả",
+            ],
+        ),
         width="stretch",
         hide_index=True,
     )

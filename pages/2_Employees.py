@@ -82,7 +82,8 @@ visible_students = [
 ]
 
 st.dataframe(
-    [
+    pd.DataFrame(
+        [
         {
             "Mã học sinh": row.student_code,
             "Họ và tên": row.full_name,
@@ -90,8 +91,10 @@ st.dataframe(
             "Ngày sinh": row.date_of_birth,
             "Trạng thái": row.status,
         }
-        for row in visible_students
-    ],
+            for row in visible_students
+        ],
+        columns=["Mã học sinh", "Họ và tên", "Lớp", "Ngày sinh", "Trạng thái"],
+    ),
     width="stretch",
     hide_index=True,
 )

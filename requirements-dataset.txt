@@ -1,0 +1,2 @@
+# Optional dependency used only by download_dataset.py.
+datasets>=3.0,<5.0

@@ -1,5 +1,6 @@
 import streamlit as st
 
+from core.dataframes import records_to_dataframe
 from db.database import (
     create_class,
     create_teacher,
@@ -55,21 +56,31 @@ teacher_map = {row.id: row for row in teachers}
 
 st.subheader("Danh sách lớp học")
 st.dataframe(
-    [
-        {
-            "Mã lớp": row.class_code,
-            "Tên lớp": row.name,
-            "Giáo viên chủ nhiệm": (
-                teacher_map[row.homeroom_teacher_id].full_name
-                if row.homeroom_teacher_id in teacher_map else "Chưa phân công"
-            ),
-            "Trạng thái": "Đang hoạt động" if row.active else "Ngừng hoạt động",
-        }
-        for row in classes
-    ],
+    records_to_dataframe(
+        [
+            {
+                "Mã lớp": row.class_code,
+                "Tên lớp": row.name,
+                "Giáo viên chủ nhiệm": (
+                    teacher_map[row.homeroom_teacher_id].full_name
+                    if row.homeroom_teacher_id in teacher_map else "Chưa phân công"
+                ),
+                "Trạng thái": "Đang hoạt động" if row.active else "Ngừng hoạt động",
+            }
+            for row in classes
+        ],
+        [
+            "Mã lớp",
+            "Tên lớp",
+            "Giáo viên chủ nhiệm",
+            "Trạng thái",
+        ],
+    ),
     width="stretch",
     hide_index=True,
 )
+if not classes:
+    st.info("Chưa có lớp học. Hãy tạo lớp để bắt đầu quản lý học sinh.")
 
 class_tabs = st.tabs(["Thêm lớp", "Cập nhật lớp", "Giáo viên"])
 with class_tabs[0]:

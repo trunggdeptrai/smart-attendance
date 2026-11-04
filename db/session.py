@@ -1,9 +1,10 @@
 import shutil
 from datetime import datetime
-from pathlib import Path
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+from core.paths import PROJECT_ROOT
 from db.models import Base
 
 from core.paths import DB_PATH  # có thể ghi đè bằng biến môi trường SMART_ATTENDANCE_DB

@@ -50,13 +50,13 @@ Hai trang `pages/6_Face_Detection.py` và `pages/7_Face_Recognition.py` là tran
 
 | Thành phần | Công nghệ (phiên bản đã kiểm thử) |
 |---|---|
-| Ngôn ngữ | Python 3.11.9 |
+| Ngôn ngữ | Python 3.11.x 64-bit (phiên bản triển khai được ghim) |
 | Giao diện web | Streamlit 1.55.0 (đa trang, `st.navigation`) + component camera HTML/JS (`ui/live_camera/`) |
 | Phát hiện khuôn mặt | OpenCV 4.13 – Haar Cascade `haarcascade_frontalface_default.xml` |
 | Trích xuất đặc trưng | `face_recognition` 1.3.0 / dlib 20.0.1 – vector 128 chiều (ResNet của dlib) |
 | Phân loại | K-NN có trọng số khoảng cách (K=3) + ngưỡng riêng từng học sinh + kiểm tra khoảng cách biên + đa số phiếu (`core/face_recognizer.py`) |
 | Lưu trữ | SQLite + SQLAlchemy 2.x; ảnh mẫu dạng tệp; mô hình dạng `pickle` + JSON |
-| Báo cáo | pandas, openpyxl, Plotly |
+| Báo cáo | pandas 2.3.3, openpyxl 3.1.5, Plotly; NumPy 2.2.6 (giữ bản tương thích OpenCV/Python 3.11) |
 
 ```text
 Trình duyệt (camera)  ->  Streamlit pages/  ->  core/ (phát hiện, mã hóa, phân loại, xuất báo cáo, sao lưu, nhật ký)
@@ -73,6 +73,8 @@ Chi tiết: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · thuật toán: [docs
 ├── app.py                    # Điểm khởi chạy, khởi tạo DB, menu điều hướng
 ├── core/
 │   ├── paths.py              # Đường dẫn dữ liệu (ghi đè bằng biến môi trường)
+│   ├── dataframes.py         # Bảng có schema cột ổn định
+│   ├── dashboard_data.py     # Dữ liệu trang tổng quan
 │   ├── face_detect.py        # Phát hiện khuôn mặt (Haar Cascade)
 │   ├── face_dataset.py       # Đọc ảnh mẫu, tạo vector đặc trưng khi huấn luyện
 │   ├── face_recognizer.py    # Huấn luyện, hiệu chỉnh ngưỡng, phân loại, đo thời gian
@@ -90,8 +92,12 @@ Chi tiết: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · thuật toán: [docs
 ├── tests/                    # Kiểm thử; chạy bằng tests/run_all.py (cô lập dữ liệu)
 ├── docs/                     # Tài liệu kiến trúc, thuật toán, nghiên cứu, sao lưu, triển khai
 ├── ui/                       # CSS và component camera
-├── requirements.txt          # Phụ thuộc
-├── requirements-lock.txt     # Phiên bản đã kiểm thử
+├── requirements.txt          # Phụ thuộc (đã ghim phiên bản)
+├── requirements-dataset.txt  # Chỉ cho script tải dataset tùy chọn
+├── check_environment.py      # Kiểm tra môi trường trước khi chạy
+├── setup_windows.bat         # Cài đặt một lần trên Windows
+├── INSTALL_WINDOWS.md        # Hướng dẫn cài đặt Windows chi tiết
+├── .devcontainer/            # Cấu hình Dev Container
 ├── .env.example              # Biến môi trường tùy chọn
 ├── Dockerfile, docker-compose.yml, run.bat
 └── (sinh ra khi chạy, đã .gitignore) attendance.db, data/faces/, models/, backups/, research_logs/, research_results/
@@ -100,7 +106,7 @@ Chi tiết: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · thuật toán: [docs
 ## Yêu cầu hệ thống
 
 - Windows 10/11 (đã kiểm thử Windows 11) hoặc Linux qua Docker.
-- Python **3.11** (khuyến nghị; `dlib` cần bánh xe cài sẵn hoặc CMake + bộ biên dịch C++).
+- Python **3.11.x 64-bit** (các phiên bản khác chưa được xác nhận; `dlib` có thể cần Visual Studio C++ Build Tools, Windows SDK và CMake).
 - Camera (tùy chọn – có thể tải ảnh lên thay thế). Camera trình duyệt cần `localhost` hoặc HTTPS.
 - Không cần Internet khi chạy: mọi xử lý nhận diện thực hiện cục bộ.
 
@@ -112,11 +118,14 @@ cd smart-attendance
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt     # hoặc requirements-lock.txt để có đúng phiên bản đã kiểm thử
+python -m pip install -r requirements.txt
+python check_environment.py
 python -m streamlit run app.py
 ```
 
-Mở `http://localhost:8501`. Trên Windows có thể chạy `run.bat`. Lần chạy đầu ứng dụng tự tạo `attendance.db` rỗng; tạo lớp → thêm học sinh → đăng ký khuôn mặt → huấn luyện mô hình.
+Cách nhanh trên Windows: chạy `setup_windows.bat` một lần rồi `run.bat`. Hướng dẫn chi tiết (Python 3.11, môi trường ảo, lỗi `dlib`, lỗi `arange: cannot compute length` do sai phiên bản NumPy): [INSTALL_WINDOWS.md](INSTALL_WINDOWS.md).
+
+Mở `http://localhost:8501`. Lần chạy đầu ứng dụng tự tạo `attendance.db` rỗng; tạo lớp → thêm học sinh → đăng ký khuôn mặt → huấn luyện mô hình.
 
 Biến môi trường tùy chọn (xem `.env.example`; đặt trong PowerShell bằng `$env:TEN="giá trị"` trước khi chạy): `SMART_ATTENDANCE_DATA_ROOT`, `SMART_ATTENDANCE_DB`, `SMART_ATTENDANCE_RESEARCH_LOG`.
 
@@ -186,7 +195,7 @@ Khuyến nghị: chạy **cục bộ trên máy tính của giáo viên** (khôn
 ## Nguồn gốc mã nguồn và đóng góp
 
 - Phiên bản này được **phát triển tiếp từ một đồ án điểm danh nhận diện khuôn mặt có sẵn** (dấu vết trong mã: bảng `employees`, các hàm `create_employee`, mã `NV001` – vốn là hệ thống chấm công nhân viên). Tên tác giả, đường dẫn và giấy phép của đồ án gốc: **đang được xác minh và sẽ được ghi đầy đủ tại đây**.
-- Các sửa đổi, bổ sung trước phiên bản 1.1 do người hướng dẫn thực hiện trên nền đồ án gốc; phạm vi chính xác (phần nào có sẵn, phần nào bổ sung) đang được đối chiếu với đồ án gốc. Mức đóng góp của từng người được ghi trong nhật ký nghiên cứu của dự án và không được suy ra từ lịch sử Git (lịch sử hiện chỉ có một commit khởi tạo ngày 03/11/2026).
+- Các sửa đổi, bổ sung trước phiên bản 1.1 do người hướng dẫn thực hiện trên nền đồ án gốc; phạm vi chính xác (phần nào có sẵn, phần nào bổ sung) đang được đối chiếu với đồ án gốc. Mức đóng góp của từng người được ghi trong nhật ký nghiên cứu của dự án và không được suy ra từ lịch sử Git (lịch sử Git bắt đầu từ commit khởi tạo ngày 03/11/2026).
 - Phiên bản 1.1 (11/2026) bổ sung công cụ nghiên cứu, sao lưu/khôi phục, cô lập kiểm thử, xóa dữ liệu khuôn mặt. Một phần mã và tài liệu được soạn với sự hỗ trợ của trợ lý AI (Claude) và đã được khai báo theo quy định.
 
 ## Tài liệu tham khảo và giấy phép

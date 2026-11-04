@@ -19,7 +19,17 @@ def detect_faces(
     It is also much more robust to large/close-up faces where HOG often fails.
     Returns face locations in (x, y, w, h) format.
     """
+    if frame is None or getattr(frame, "ndim", 0) < 2:
+        return [], None
+
     height, width = frame.shape[:2]
+    if height <= 0 or width <= 0:
+        return [], None
+    if face_cascade.empty():
+        raise FileNotFoundError(
+            "Không tìm thấy mô hình Haar Cascade của OpenCV. "
+            "Hãy cài lại opencv-python trong môi trường ảo."
+        )
     
     processing_width = max(1, int(processing_width))
     scale = min(1.0, processing_width / width)

@@ -4,11 +4,11 @@ import cv2
 import numpy as np
 import face_recognition
 
+from core.paths import FACE_DATASET_DIR
+
 # Doc toan bo anh trong data/faces, chuyen du lieu anh thanh face encodings
 # Tao mapping giua employee_code va list cac face encoding vectors (128D)
-from core.paths import FACES_DIR
-
-DATASET_DIR = FACES_DIR
+DATASET_DIR = FACE_DATASET_DIR
 VALID_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 
@@ -20,10 +20,10 @@ def list_employee_folders(valid_employee_codes=None):
     if not DATASET_DIR.exists():
         return []
 
-    valid_codes = set(valid_employee_codes or [])
+    valid_codes = set(valid_employee_codes) if valid_employee_codes is not None else None
     folders = [folder for folder in DATASET_DIR.iterdir() if folder.is_dir()]
 
-    if valid_codes:
+    if valid_codes is not None:
         folders = [folder for folder in folders if folder.name in valid_codes]
 
     return sorted(folders, key=lambda folder: folder.name)

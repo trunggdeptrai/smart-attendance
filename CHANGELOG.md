@@ -16,8 +16,9 @@ Thực hiện bởi người hướng dẫn với sự hỗ trợ của trợ l�
 - `core/research_log.py` + trang **Đánh giá thực nghiệm**: nhật ký nhận diện và quyết định của giáo viên (không lưu ảnh).
 - `core/backup.py`, `scripts/restore_backup.py`, mục sao lưu trong **Cài đặt**: sao lưu ZIP nhất quán, kiểm tra SHA-256, khôi phục có bản an toàn.
 - Xóa ảnh mẫu của một học sinh và huấn luyện lại (rút lại sự đồng ý); xóa tệp mô hình khi không còn ảnh mẫu.
-- Tài liệu: `docs/ARCHITECTURE.md`, `ALGORITHM.md`, `RESEARCH_TOOLKIT.md`, `BACKUP_RESTORE.md`, `DEPLOY.md`; `.env.example`; `requirements-lock.txt`.
+- Tài liệu: `docs/ARCHITECTURE.md`, `ALGORITHM.md`, `RESEARCH_TOOLKIT.md`, `BACKUP_RESTORE.md`, `DEPLOY.md`; `.env.example`.
 - README viết lại: mô tả trung thực nguồn gốc mã nguồn, hạn chế, quyền riêng tư.
 
 ## [1.0.0] – 03/11/2026
 - Commit khởi tạo trên GitHub (phiên bản người hướng dẫn phát triển từ đồ án có sẵn).
+- 03–04/11/2026 (trên GitHub): sửa ổn định, cài đặt Windows (setup_windows.bat, INSTALL_WINDOWS.md, check_environment.py), ghim phiên bản phụ thuộc, Dev Container.
