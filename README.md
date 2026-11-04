@@ -2,7 +2,7 @@
 
 Ứng dụng web hỗ trợ giáo viên điểm danh học sinh bằng nhận diện khuôn mặt. Kết quả nhận diện **chỉ là gợi ý**: giáo viên kiểm tra và xác nhận từng học sinh trước khi lưu; luôn có phương án điểm danh thủ công. Học sinh không được camera nhận diện **không** bị tự động tính là vắng mặt.
 
-> Phiên bản hiện tại được dùng làm sản phẩm của một dự án nghiên cứu khoa học kỹ thuật cấp THPT (năm học 2026–2027). Xem mục [Nguồn gốc mã nguồn và đóng góp](#nguồn-gốc-mã-nguồn-và-đóng-góp).
+> Phiên bản hiện tại được dùng làm sản phẩm của một dự án nghiên cứu khoa học kỹ thuật cấp THPT (năm học 2026–2027). Xem mục [Tác giả và đóng góp](#tác-giả-và-đóng-góp).
 
 ## Mục lục
 
@@ -19,7 +19,7 @@
 - [Cập nhật phiên bản](#cập-nhật-phiên-bản)
 - [Bảo mật và quyền riêng tư](#bảo-mật-và-quyền-riêng-tư)
 - [Hạn chế hiện tại](#hạn-chế-hiện-tại)
-- [Nguồn gốc mã nguồn và đóng góp](#nguồn-gốc-mã-nguồn-và-đóng-góp)
+- [Tác giả và đóng góp](#tác-giả-và-đóng-góp)
 - [Tài liệu tham khảo và giấy phép](#tài-liệu-tham-khảo-và-giấy-phép)
 
 ## Tính năng
@@ -192,11 +192,11 @@ Khuyến nghị: chạy **cục bộ trên máy tính của giáo viên** (khôn
 - Ngưỡng 0,48 và các tham số K-NN được chọn thủ công; **chưa được kiểm chứng bằng thực nghiệm có hệ thống** – đang được đánh giá bằng công cụ trong `research/`.
 - Chỉ thiết kế cho một máy, một camera, dữ liệu cục bộ; chưa kiểm chứng ở quy mô toàn trường.
 
-## Nguồn gốc mã nguồn và đóng góp
+## Tác giả và đóng góp
 
-- Phiên bản này được **phát triển tiếp từ một đồ án điểm danh nhận diện khuôn mặt có sẵn** (dấu vết trong mã: bảng `employees`, các hàm `create_employee`, mã `NV001` – vốn là hệ thống chấm công nhân viên). Tên tác giả, đường dẫn và giấy phép của đồ án gốc: **đang được xác minh và sẽ được ghi đầy đủ tại đây**.
-- Các sửa đổi, bổ sung trước phiên bản 1.1 do người hướng dẫn thực hiện trên nền đồ án gốc; phạm vi chính xác (phần nào có sẵn, phần nào bổ sung) đang được đối chiếu với đồ án gốc. Mức đóng góp của từng người được ghi trong nhật ký nghiên cứu của dự án và không được suy ra từ lịch sử Git (lịch sử Git bắt đầu từ commit khởi tạo ngày 03/11/2026).
-- Phiên bản 1.1 (11/2026) bổ sung công cụ nghiên cứu, sao lưu/khôi phục, cô lập kiểm thử, xóa dữ liệu khuôn mặt. Một phần mã và tài liệu được soạn với sự hỗ trợ của trợ lý AI (Claude) và đã được khai báo theo quy định.
+- **Tác giả:** Phạm Hoàng Trung – giáo viên Tin học, Trường THPT Tiên Lữ (Hưng Yên). Tác giả xây dựng phiên bản đầu tiên là hệ thống chấm công nhân viên bằng khuôn mặt (còn lại trong mã: bảng `employees`, mã `NV001`), sau đó phát triển thành hệ thống điểm danh học sinh: lớp, học sinh, giáo viên, lượt vào/ra có giáo viên xác nhận, báo cáo chuyên cần, migration dữ liệu.
+- **Phiên bản 1.1 (11/2026):** bổ sung công cụ nghiên cứu, sao lưu/khôi phục, cô lập kiểm thử, xóa dữ liệu khuôn mặt. Một phần mã và tài liệu được soạn với sự hỗ trợ của trợ lý AI (Claude) và đã được khai báo theo quy định.
+- Khi dùng làm sản phẩm dự án KHKT của học sinh, phần việc của từng học sinh được ghi trong nhật ký nghiên cứu của dự án, không suy ra từ lịch sử Git.
 
 ## Tài liệu tham khảo và giấy phép
 
@@ -204,4 +204,4 @@ Khuyến nghị: chạy **cục bộ trên máy tính của giáo viên** (khôn
 - Viola, P., & Jones, M. (2001). Rapid object detection using a boosted cascade of simple features. *CVPR 2001*.
 - Thư viện `face_recognition` (Adam Geitgey, giấy phép MIT); OpenCV (Apache 2.0); Streamlit (Apache 2.0); dlib (Boost Software License); SQLAlchemy (MIT).
 
-**Giấy phép của kho mã này chưa được công bố** vì còn chờ xác minh giấy phép của đồ án gốc. Việc sử dụng lại mã cần tuân thủ giấy phép của đồ án gốc và của các thư viện bên thứ ba.
+© 2026 Phạm Hoàng Trung. Kho mã chưa áp dụng giấy phép mã nguồn mở; muốn sử dụng lại, vui lòng liên hệ tác giả. Các thư viện bên thứ ba tuân theo giấy phép riêng của từng thư viện.

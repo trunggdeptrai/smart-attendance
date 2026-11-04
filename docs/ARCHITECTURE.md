@@ -17,7 +17,7 @@
 | `classes` | Lớp học (`class_code` duy nhất, GVCN) |
 | `teachers` | Giáo viên |
 | `students` | Học sinh (`student_code` duy nhất, lớp, trạng thái: Đang học/Đã xóa/…) |
-| `employees` | Bảng tương thích từ đồ án gốc (chấm công nhân viên); mỗi học sinh có một dòng tương ứng |
+| `employees` | Bảng tương thích từ phiên bản đầu (chấm công nhân viên) của tác giả; mỗi học sinh có một dòng tương ứng |
 | `attendance_logs` | Lượt điểm danh: học sinh, lớp, ngày, buổi, `log_type` IN/OUT, trạng thái, phương thức face/manual, khoảng cách |
 | `schema_migrations` | Phiên bản migration (1–3) |
 
