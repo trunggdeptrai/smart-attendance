@@ -53,7 +53,7 @@ Hai trang `pages/6_Face_Detection.py` và `pages/7_Face_Recognition.py` là tran
 | Ngôn ngữ | Python 3.11.x 64-bit (phiên bản triển khai được ghim) |
 | Giao diện web | Streamlit 1.55.0 (đa trang, `st.navigation`) + component camera HTML/JS (`ui/live_camera/`) |
 | Phát hiện khuôn mặt | OpenCV 4.13 – Haar Cascade `haarcascade_frontalface_default.xml` |
-| Trích xuất đặc trưng | `face_recognition` 1.3.0 / dlib 20.0.1 – vector 128 chiều (ResNet của dlib) |
+| Trích xuất đặc trưng | `face_recognition` 1.3.0 (mã MIT sao chép trong `face_recognition/`) / dlib 20.0.1 bản dựng sẵn `dlib-bin` – vector 128 chiều (ResNet của dlib) |
 | Phân loại | K-NN có trọng số khoảng cách (K=3) + ngưỡng riêng từng học sinh + kiểm tra khoảng cách biên + đa số phiếu (`core/face_recognizer.py`) |
 | Lưu trữ | SQLite + SQLAlchemy 2.x; ảnh mẫu dạng tệp; mô hình dạng `pickle` + JSON |
 | Báo cáo | pandas 2.3.3, openpyxl 3.1.5, Plotly; NumPy 2.2.6 (giữ bản tương thích OpenCV/Python 3.11) |
@@ -106,7 +106,7 @@ Chi tiết: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · thuật toán: [docs
 ## Yêu cầu hệ thống
 
 - Windows 10/11 (đã kiểm thử Windows 11) hoặc Linux qua Docker.
-- Python **3.11.x 64-bit** (các phiên bản khác chưa được xác nhận; `dlib` có thể cần Visual Studio C++ Build Tools, Windows SDK và CMake).
+- Python **3.11.x 64-bit** (các phiên bản khác chưa được xác nhận). `dlib` dùng bản dựng sẵn `dlib-bin` nên **không cần** Visual Studio Build Tools hay CMake.
 - Camera (tùy chọn – có thể tải ảnh lên thay thế). Camera trình duyệt cần `localhost` hoặc HTTPS.
 - Không cần Internet khi chạy: mọi xử lý nhận diện thực hiện cục bộ.
 
@@ -202,6 +202,6 @@ Khuyến nghị: chạy **cục bộ trên máy tính của giáo viên** (khôn
 
 - King, D. E. (2009). Dlib-ml: A Machine Learning Toolkit. *Journal of Machine Learning Research*, 10, 1755–1758.
 - Viola, P., & Jones, M. (2001). Rapid object detection using a boosted cascade of simple features. *CVPR 2001*.
-- Thư viện `face_recognition` (Adam Geitgey, giấy phép MIT); OpenCV (Apache 2.0); Streamlit (Apache 2.0); dlib (Boost Software License); SQLAlchemy (MIT).
+- Thư viện `face_recognition` (Adam Geitgey, giấy phép MIT – 2 tệp được sao chép nguyên bản vào `face_recognition/` kèm LICENSE, xem `face_recognition/README_VENDORED.md`); OpenCV (Apache 2.0); Streamlit (Apache 2.0); dlib (Boost Software License); SQLAlchemy (MIT).
 
 © 2026 Phạm Hoàng Trung. Kho mã chưa áp dụng giấy phép mã nguồn mở; muốn sử dụng lại, vui lòng liên hệ tác giả. Các thư viện bên thứ ba tuân theo giấy phép riêng của từng thư viện.

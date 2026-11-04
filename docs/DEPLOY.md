@@ -3,7 +3,7 @@
 ## 1. Đặc điểm kiến trúc ảnh hưởng đến lựa chọn nền tảng
 
 - Streamlit là máy chủ Python **chạy liên tục** với WebSocket → không phù hợp nền tảng serverless (Vercel, Cloudflare Workers/Pages).
-- `dlib` cần biên dịch C++ khi không có bánh xe sẵn → bản dựng lâu (10–20 phút), cần ≥ 2 GB RAM khi build.
+- `dlib` dùng bản dựng sẵn `dlib-bin` (không biên dịch). Trước đây biên dịch từ mã nguồn mất > 45 phút trên Streamlit Cloud và không hoàn thành.
 - Dữ liệu ghi xuống đĩa (SQLite, ảnh, mô hình) → cần **ổ đĩa bền vững**; đĩa tạm sẽ mất dữ liệu khi khởi động lại.
 - Dữ liệu sinh trắc học của học sinh → lưu trên máy chủ bên thứ ba ở nước ngoài làm tăng rủi ro pháp lý (Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân xếp dữ liệu sinh trắc học vào nhóm dữ liệu nhạy cảm).
 - Camera trình duyệt cần HTTPS khi truy cập không qua `localhost`.
@@ -57,9 +57,9 @@ Mặc định cổng chỉ mở trên `127.0.0.1:8501`. Muốn cho máy khác tr
 1. Đăng nhập share.streamlit.io bằng tài khoản GitHub sở hữu repo.
 2. **Create app → Deploy a public app from GitHub**: repo `trunggdeptrai/smart-attendance`, nhánh `main`, tệp chính `app.py`.
 3. **Advanced settings → Python version: 3.11** (bắt buộc – các phiên bản khác chưa kiểm thử với dlib/NumPy 2.2.6).
-4. Tệp `packages.txt` ở gốc repo cài `cmake`, `build-essential`… để biên dịch `dlib`; lần build đầu mất khoảng 15–30 phút.
+4. Không cần `packages.txt`: `dlib-bin` là bản dựng sẵn; lần build đầu khoảng vài phút.
 5. Giới hạn: ổ đĩa tạm (mất dữ liệu khi app ngủ/khởi động lại), tài nguyên hạn chế, app công khai, chưa có đăng nhập → **chỉ dùng dữ liệu demo**.
-6. Nếu build `dlib` thất bại do hết bộ nhớ: dùng Hugging Face Spaces (`deploy/huggingface/`) hoặc chạy cục bộ.
+6. Nếu build thất bại: dùng Hugging Face Spaces (`deploy/huggingface/`) hoặc chạy cục bộ.
 
 ## 8. Biến môi trường
 

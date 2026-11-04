@@ -4,7 +4,7 @@
 
 - Windows 10/11 64-bit.
 - Python **3.11.x 64-bit** và Python Launcher (`py`). Phiên bản này được ghim để tránh các bản Python mới chưa tương thích với NumPy, OpenCV và dlib.
-- Visual Studio C++ Build Tools và CMake nếu pip phải biên dịch dlib từ mã nguồn.
+- Không cần Visual Studio Build Tools/CMake: `requirements.txt` dùng bản dựng sẵn `dlib-bin` 20.0.1.
 - Camera chỉ cần thiết cho các luồng sử dụng camera; một số luồng cho phép tải ảnh thay thế.
 
 ## Cài mới từ tệp ZIP
@@ -97,7 +97,7 @@ Migration hiện có được áp dụng khi khởi tạo. Nếu cập nhật nh
 |---|---|
 | Không tìm thấy Python 3.11 | Cài Python 3.11 x64 và Python Launcher; kiểm tra `py -3.11 --version`. |
 | `.venv` không đúng Python | Đổi tên `.venv` hiện tại (không cần xóa) rồi chạy lại `setup_windows.bat`. |
-| Lỗi khi build `dlib` | Cài Visual Studio Build Tools với workload **Desktop development with C++**, Windows SDK và CMake; sau đó thử lại trong `.venv`. |
+| Lỗi khi cài `dlib` | Kiểm tra đang dùng Python 3.11 64-bit (có bản dựng sẵn `dlib-bin`). Nếu môi trường cũ còn gói `dlib` hoặc `face-recognition` cài trước đó, chạy `pip uninstall dlib face-recognition` rồi cài lại `requirements.txt`. |
 | Thiếu package / lỗi import | Chạy `.\.venv\Scripts\python.exe -m pip install -r requirements.txt`, sau đó `check_environment.py`. |
 | `arange: cannot compute length` | Chạy `.\run.bat` để chắc chắn dùng `.venv` của dự án. Kiểm tra chính xác interpreter và NumPy bằng `.\.venv\Scripts\python.exe --version` và `.\.venv\Scripts\python.exe -m pip show numpy`. Cần Python 3.11.x và NumPy 2.2.6; nếu dùng `.venv` khác, đổi tên nó rồi chạy `setup_windows.bat`. |
 | Chưa có file mô hình | Trạng thái bình thường với cài đặt mới. Tạo hồ sơ học sinh, đăng ký ảnh rồi huấn luyện ở trang đăng ký khuôn mặt. |
