@@ -707,10 +707,13 @@ with st.expander("Điểm danh thủ công hoặc ghi nhận vắng mặt"):
                 f"{student_by_id[value].student_code} · {student_by_id[value].full_name}"
             ),
         )
+        # Trong st.form, đổi "Loại lượt" không chạy lại trang nên không thể lọc
+        # danh sách trạng thái theo lựa chọn đó; luôn hiển thị đủ 3 trạng thái.
+        # Lượt ra + "Vắng mặt" bị từ chối ở record_student_attendance.
         manual_status = st.selectbox(
             "Trạng thái điểm danh",
-            ["Có mặt", "Đi muộn", "Vắng mặt"]
-            if manual_event == "IN" else ["Có mặt", "Đi muộn"],
+            ["Có mặt", "Đi muộn", "Vắng mặt"],
+            help="“Vắng mặt” chỉ áp dụng cho lượt vào.",
         )
         manual_submitted = st.form_submit_button("Lưu điểm danh thủ công")
     if manual_submitted:

@@ -62,6 +62,21 @@
         const video = document.querySelector("video");
         const canvas = document.querySelector("canvas");
         const message = document.querySelector(".message");
+
+        // Đổi lỗi getUserMedia (tiếng Anh) thành hướng dẫn tiếng Việt cho giáo viên.
+        function cameraErrorText(error) {
+          const name = (error && error.name) || "";
+          if (name === "NotAllowedError" || name === "SecurityError") {
+            return "Trình duyệt chưa được cấp quyền camera. Bấm biểu tượng ổ khóa trên thanh địa chỉ để cho phép camera, hoặc dùng chế độ “Tải ảnh từ thiết bị”.";
+          }
+          if (name === "NotFoundError" || name === "OverconstrainedError") {
+            return "Không tìm thấy camera đã chọn. Kiểm tra camera đã cắm hoặc chọn camera khác.";
+          }
+          if (name === "NotReadableError") {
+            return "Camera đang được ứng dụng khác sử dụng. Đóng ứng dụng đó rồi thử lại.";
+          }
+          return (error && error.message) || "Không thể mở camera.";
+        }
         const fpsBadge = document.querySelector(".fps");
         const overlay = canvas.getContext("2d");
         const captureCanvas = document.createElement("canvas");
@@ -345,8 +360,9 @@
             } catch (error) {
               openFailed = true;
               stopCamera();
-              setMessage(error.message || "Không thể mở camera.", true);
-              sendStatus(error.message || "Không thể mở camera.");
+              const text = cameraErrorText(error);
+              setMessage(text, true);
+              sendStatus(text);
             } finally {
               openingCamera = false;
             }

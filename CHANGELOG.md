@@ -8,6 +8,10 @@
 - `scripts/rename_student_code.py`: đổi mã một học sinh đồng bộ trên `students`, bảng định danh kỹ thuật, `attendance_logs`, thư mục ảnh mẫu và nhật ký; chạy thử mặc định, tự sao lưu khi thực hiện.
 - Kiểm thử xuất/nhập Excel (`tests/test_excel_io.py`) và công cụ đổi mã (`tests/test_rename_student_code.py`).
 
+### Sửa lỗi
+- Form điểm danh thủ công: khi đầu trang đang chọn "Điểm danh ra", đổi sang "Điểm danh vào" trong form vẫn không có lựa chọn "Vắng mặt" (form không chạy lại trang) → luôn hiển thị đủ 3 trạng thái; lượt ra + vắng mặt vẫn bị từ chối ở tầng dữ liệu.
+- Camera bị trình duyệt chặn quyền chỉ hiện "Permission denied" → hiển thị hướng dẫn tiếng Việt (cấp quyền hoặc dùng chế độ tải ảnh).
+
 ### Thay đổi
 - Thống nhất thuật ngữ học sinh: trang Quản lý học sinh đổi tên tệp thành `pages/2_Students.py` (đường dẫn `/Students`); thông báo và chú thích trong mã dùng "học sinh".
 - README bổ sung mục Mô hình dữ liệu; `docs/ARCHITECTURE.md` mô tả rõ các tên kỹ thuật kế thừa (bảng `employees`, cột `employee_code`) chỉ lưu mã học sinh.
