@@ -153,13 +153,13 @@ def test_first_and_repeat_checkin_integration():
     # Step B: Quét mặt NV098 lần thứ 2 -> Bị chặn, thông báo đã check-in rồi
     can_log_2, msg_2 = can_check_in(test_code)
     assert can_log_2 is False, "Lần thứ 2 check-in trong ngày phải bị chặn!"
-    assert "already checked in" in msg_2.lower()
+    assert "đã điểm danh vào" in msg_2.lower()
 
-    warning_msg = f"⚠️ Nhân viên {test_code} đã thực hiện check-in rồi! Không thể check-in được nữa."
+    warning_msg = f"⚠️ Học sinh {test_code} đã thực hiện check-in rồi! Không thể check-in được nữa."
     repeat_status = {
         "employee_code": test_code,
         "status": "already_checked_in",
-        "message": f"⚠️ Nhân viên **{test_code}** đã thực hiện check-in rồi! Không thể check-in được nữa.",
+        "message": f"⚠️ Học sinh **{test_code}** đã thực hiện check-in rồi! Không thể check-in được nữa.",
         "action": action_text,
     }
     assert repeat_status["status"] == "already_checked_in"
@@ -195,12 +195,12 @@ def test_toast_anti_spam_debounce():
         return True
 
     # Bắn toast lần 1 -> Thành công
-    assert mock_trigger_toast("NV001", "success", "Success 1") is True
+    assert mock_trigger_toast("HS001", "success", "Success 1") is True
     # Bắn lặp lại ngay lập tức -> Phải bị chặn
-    assert mock_trigger_toast("NV001", "success", "Success 1") is False
+    assert mock_trigger_toast("HS001", "success", "Success 1") is False
     assert len(sent_toasts) == 1
     # Bắn sự kiện khác (cảnh báo) -> Được phép
-    assert mock_trigger_toast("NV001", "already_checked_in", "Warning") is True
+    assert mock_trigger_toast("HS001", "already_checked_in", "Warning") is True
     assert len(sent_toasts) == 2
     print("  Toast Anti-Spam Debounce -> PASSED!")
 
@@ -215,7 +215,7 @@ def test_checkout_validation_rules():
     # Chưa check-in -> Không được phép check-out
     can_out_1, msg_out_1 = can_check_out(test_emp)
     assert can_out_1 is False
-    assert "not checked in" in msg_out_1.lower()
+    assert "chưa điểm danh vào" in msg_out_1.lower()
     print(f"  Step A: Checkout without Check-in blocked -> {msg_out_1}")
 
     # Thực hiện check-in trước
@@ -231,7 +231,7 @@ def test_checkout_validation_rules():
     # Sau khi đã check-out -> Không được phép check-out lần 2
     can_out_3, msg_out_3 = can_check_out(test_emp)
     assert can_out_3 is False
-    assert "already checked out" in msg_out_3.lower()
+    assert "đã điểm danh ra" in msg_out_3.lower()
     print(f"  Step C: Repeat Checkout blocked -> {msg_out_3}")
 
     with SessionLocal() as db_session:

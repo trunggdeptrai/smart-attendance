@@ -17,7 +17,7 @@
 | `classes` | Lớp học (`class_code` duy nhất, GVCN) |
 | `teachers` | Giáo viên |
 | `students` | Học sinh (`student_code` duy nhất, lớp, trạng thái: Đang học/Đã xóa/…) |
-| `employees` | Bảng tương thích từ phiên bản đầu (chấm công nhân viên) của tác giả; mỗi học sinh có một dòng tương ứng |
+| `employees` | Bảng định danh kỹ thuật (tên lịch sử). Phản chiếu 1:1 bảng `students` (cùng mã học sinh; cột `department` = tên lớp), được tạo/cập nhật tự động cùng hồ sơ học sinh. Tồn tại vì `attendance_logs.employee_code` (NOT NULL) có khóa ngoại trỏ tới đây. Giao diện và nghiệp vụ chỉ dùng `students` |
 | `attendance_logs` | Lượt điểm danh: học sinh, lớp, ngày, buổi, `log_type` IN/OUT, trạng thái, phương thức face/manual, khoảng cách |
 | `schema_migrations` | Phiên bản migration (1–3) |
 
@@ -40,6 +40,14 @@ Migration tự động tạo bản sao DB trong `database_backups/` trước khi
 - `SMART_ATTENDANCE_DB` – tệp SQLite.
 
 Nhờ đó kiểm thử chạy trên bản sao dữ liệu (`tests/run_all.py`) và có thể đặt dữ liệu ngoài thư mục mã nguồn khi triển khai.
+
+## Tên kỹ thuật kế thừa
+
+Một số định danh nội bộ giữ tên lịch sử để không phá vỡ dữ liệu và migration đã có: bảng `employees`, cột `attendance_logs.employee_code`, lớp ORM `Employee`, các hàm `get_employee_codes`, `ensure_employee_folder`… Trong mọi trường hợp, giá trị lưu ở đây là **mã học sinh**. Giao diện, tài liệu và mã học sinh (`HSxxx`) dùng thuật ngữ học sinh.
+
+Đổi tên bảng/cột (dự kiến migration v4) cần dựng lại `attendance_logs` trên SQLite (khóa ngoại, chỉ mục duy nhất có điều kiện, cột NOT NULL), cập nhật migration v1–3 và kiểm thử; chưa thực hiện vì rủi ro cao hơn lợi ích và không ảnh hưởng tới người dùng.
+
+Đổi mã một học sinh (vd chuẩn hóa mã cũ) dùng `scripts/rename_student_code.py`: tự sao lưu, chạy thử trước, cập nhật đồng bộ `students`, `employees`, `attendance_logs`, thư mục ảnh mẫu và nhật ký.
 
 ## Khả năng mở rộng (định hướng, chưa thực hiện)
 

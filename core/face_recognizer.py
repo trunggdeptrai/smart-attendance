@@ -110,7 +110,7 @@ def _load_model_cached(encodings_mtime_ns, label_map_mtime_ns, metadata_mtime_ns
 
 def _build_model_metadata(known_encodings, known_labels, label_to_code, images_per_employee):
     """
-    Tính ngưỡng tối ưu cho mỗi nhân viên dựa trên khoảng cách nội bộ (intra-class distance).
+    Tính ngưỡng tối ưu cho mỗi học sinh dựa trên khoảng cách nội bộ (intra-class distance).
     """
     distance_by_code = {}
     min_threshold = (
@@ -130,7 +130,7 @@ def _build_model_metadata(known_encodings, known_labels, label_to_code, images_p
         if label is None:
             continue
 
-        # Lấy tất cả encodings của nhân viên này
+        # Lấy tất cả encodings của học sinh này
         employee_encodings = [
             enc for enc, lbl in zip(known_encodings, known_labels)
             if lbl == label

@@ -2,6 +2,16 @@
 
 Định dạng theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/).
 
+## [Chưa phát hành]
+
+### Thêm mới
+- `scripts/rename_student_code.py`: đổi mã một học sinh đồng bộ trên `students`, bảng định danh kỹ thuật, `attendance_logs`, thư mục ảnh mẫu và nhật ký; chạy thử mặc định, tự sao lưu khi thực hiện.
+- Kiểm thử xuất/nhập Excel (`tests/test_excel_io.py`) và công cụ đổi mã (`tests/test_rename_student_code.py`).
+
+### Thay đổi
+- Thống nhất thuật ngữ học sinh: trang Quản lý học sinh đổi tên tệp thành `pages/2_Students.py` (đường dẫn `/Students`); thông báo và chú thích trong mã dùng "học sinh".
+- README bổ sung mục Mô hình dữ liệu; `docs/ARCHITECTURE.md` mô tả rõ các tên kỹ thuật kế thừa (bảng `employees`, cột `employee_code`) chỉ lưu mã học sinh.
+
 ## [1.1.0] – 2026-11-05
 
 ### Thêm mới

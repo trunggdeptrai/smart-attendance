@@ -19,7 +19,7 @@ try:
     update_employee(last_id, "Updated Name", "HR")
     print("Updated")
     
-    # Đảm bảo dọn dẹp các log cũ nếu có của mã nhân viên test để test chạy độc lập (idempotent)
+    # Đảm bảo dọn dẹp các log cũ nếu có của mã học sinh test để test chạy độc lập (idempotent)
     from db.session import SessionLocal
     from db.models import AttendanceLog
     with SessionLocal() as db_session:

@@ -66,6 +66,20 @@ Dữ liệu: attendance.db · data/faces/<mã>/ · models/ · backups/ · resear
 
 Chi tiết: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · thuật toán: [docs/ALGORITHM.md](docs/ALGORITHM.md).
 
+### Mô hình dữ liệu
+
+Cấu trúc dữ liệu được tổ chức theo nghiệp vụ quản lý học sinh trong nhà trường:
+
+| Nhóm dữ liệu | Lưu trữ |
+|---|---|
+| Học sinh | Bảng `students` – mã học sinh dạng `HS001`, `HS002`… (tự sinh), họ tên, ngày sinh, lớp, trạng thái học tập |
+| Lớp học, giáo viên | Bảng `classes` (mã lớp, tên lớp, GVCN) và `teachers` |
+| Dữ liệu khuôn mặt | Ảnh mẫu `data/faces/<mã học sinh>/`; vector đặc trưng và ngưỡng nhận diện trong `models/` |
+| Điểm danh và lịch sử | Bảng `attendance_logs` – học sinh, lớp, ngày, buổi, lượt vào/ra, trạng thái, phương thức (nhận diện/thủ công), khoảng cách nhận diện |
+| Tài khoản hệ thống | Một tài khoản quản trị, mật khẩu băm trong `.streamlit/secrets.toml` hoặc Secrets của Streamlit Cloud |
+
+Các thành phần dữ liệu kế thừa từ phiên bản nền đã được rà soát và điều chỉnh để phù hợp với mô hình quản lý học sinh; chi tiết từng bảng (kể cả bảng kỹ thuật dùng cho khóa ngoại) trong [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ## Cấu trúc thư mục
 
 ```text
@@ -91,6 +105,7 @@ Chi tiết: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · thuật toán: [docs
 │   └── evaluate_recognition.py   # Đánh giá offline: độ chính xác, nhận nhầm, thời gian, quét ngưỡng
 ├── scripts/
 │   ├── set_password.py       # Đặt tài khoản đăng nhập
+│   ├── rename_student_code.py # Đổi mã học sinh đồng bộ toàn bộ dữ liệu (có sao lưu)
 │   └── restore_backup.py     # Tạo/kiểm tra/khôi phục bản sao lưu
 ├── face_recognition/         # Mã nguồn thư viện face_recognition (MIT, bên thứ ba)
 ├── tests/                    # Kiểm thử; chạy bằng tests/run_all.py (cô lập dữ liệu)
@@ -169,7 +184,7 @@ Hướng dẫn tổ chức ảnh kiểm thử và ý nghĩa chỉ số: [docs/RE
 python tests/run_all.py
 ```
 
-Trình chạy sao chép dữ liệu sang thư mục tạm và đặt `SMART_ATTENDANCE_DATA_ROOT`, nên kiểm thử **không ghi vào `attendance.db` thật**. Kết quả gần nhất: 11/11 tệp đạt (05/11/2026, Windows 11, Python 3.11.9).
+Trình chạy sao chép dữ liệu sang thư mục tạm và đặt `SMART_ATTENDANCE_DATA_ROOT`, nên kiểm thử **không ghi vào `attendance.db` thật**. Kết quả gần nhất: 13/13 tệp đạt (05/11/2026, Windows 11, Python 3.11.9).
 
 ## Triển khai
 
@@ -203,8 +218,7 @@ Khuyến nghị: chạy **cục bộ trên máy tính của giáo viên** (khôn
 
 Phạm Hoàng Trung – giáo viên Tin học, Trường THPT Tiên Lữ (Hưng Yên).
 
-Phần mềm được phát triển với sự hỗ trợ của trợ lý lập trình AI Claude (Anthropic); từ phiên bản 1.1, các commit có AI tham gia được ghi nhận bằng dòng `Co-Authored-By` trong lịch sử Git. Bảng `employees` và mã `NV001` trong cơ sở dữ liệu là phần tương thích với phiên bản đầu (hệ thống chấm công nhân viên).
-
+Phần mềm được phát triển với sự hỗ trợ của trợ lý lập trình AI Claude (Anthropic); từ phiên bản 1.1, các commit có AI tham gia được ghi nhận bằng dòng `Co-Authored-By` trong lịch sử Git.
 ## Tài liệu tham khảo và giấy phép
 
 - King, D. E. (2009). Dlib-ml: A Machine Learning Toolkit. *Journal of Machine Learning Research*, 10, 1755–1758.

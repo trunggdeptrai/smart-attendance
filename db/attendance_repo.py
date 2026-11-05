@@ -139,25 +139,25 @@ def can_check_in(employee_code, reference_time=None):
     has_check_in_today = any(log["log_type"] == "IN" for log in today_logs)
 
     if not has_check_in_today:
-        return True, "The employee can check in today."
-    return False, "The employee has already checked in today."
+        return True, "Học sinh có thể điểm danh vào hôm nay."
+    return False, "Học sinh đã điểm danh vào hôm nay."
 
 def can_check_out(employee_code, reference_time=None):
     today_logs = get_today_logs(employee_code, reference_time)
 
     if not today_logs:
-        return False, "The employee has not checked in today, so check-out is not allowed."
+        return False, "Học sinh chưa điểm danh vào hôm nay nên chưa thể điểm danh ra."
 
     latest_log = today_logs[-1]
     has_check_in_today = any(log["log_type"] == "IN" for log in today_logs)
 
     if not has_check_in_today:
-        return False, "The employee has not checked in today, so check-out is not allowed."
+        return False, "Học sinh chưa điểm danh vào hôm nay nên chưa thể điểm danh ra."
 
     if latest_log["log_type"] == "OUT":
-        return False, "The employee has already checked out today."
+        return False, "Học sinh đã điểm danh ra hôm nay."
 
-    return True, "The employee can check out today."
+    return True, "Học sinh có thể điểm danh ra hôm nay."
 
 def register_check_in(employee_code, camera_source, confidence, reference_time=None):
     can_log, message = can_check_in(employee_code, reference_time)

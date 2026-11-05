@@ -141,8 +141,8 @@ def test_face_recognition_annotation_and_render():
     # 1. Test Match Annotation (Xanh lá)
     faces_list = [(100, 100, 200, 200)]
     pred_match = {
-        "display_code": "NV001",
-        "predicted_code": "NV001",
+        "display_code": "HS001",
+        "predicted_code": "HS001",
         "confidence": 0.45,
         "match_threshold": 0.60,
         "is_match": True,

@@ -7,7 +7,7 @@ import face_recognition
 from core.paths import FACE_DATASET_DIR
 
 # Doc toan bo anh trong data/faces, chuyen du lieu anh thanh face encodings
-# Tao mapping giua employee_code va list cac face encoding vectors (128D)
+# Tao mapping giua ma hoc sinh (student_code) va list cac face encoding vectors (128D)
 DATASET_DIR = FACE_DATASET_DIR
 VALID_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
@@ -15,7 +15,7 @@ VALID_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 def list_employee_folders(valid_employee_codes=None):
     """
     Tra ve danh sach thu muc nhan vien trong data/faces.
-    Chi lay cac thu muc hop le neu co danh sach employee_code tu database.
+    Chi lay cac thu muc hop le neu co danh sach ma hoc sinh tu database.
     """
     if not DATASET_DIR.exists():
         return []

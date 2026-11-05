@@ -371,11 +371,11 @@ def test_smart_recognition_coordinator():
     assert store.can_trigger(now + 0.1, box1) is False, "Must not trigger while worker is busy"
     print("  Step B: Worker busy lock prevents redundant threads -> OK")
 
-    # Step C: Worker finishes and matches NV001
+    # Step C: Worker finishes and matches HS001
     matched_pred = {
         "is_match": True,
-        "employee_code": "NV001",
-        "display_code": "NV001",
+        "employee_code": "HS001",
+        "display_code": "HS001",
         "confidence": 0.42,
         "match_threshold": 0.50,
     }
@@ -384,7 +384,7 @@ def test_smart_recognition_coordinator():
     
     pred, is_new, is_busy = store.get_prediction()
     assert pred is not None
-    assert pred["employee_code"] == "NV001"
+    assert pred["employee_code"] == "HS001"
     assert is_new is True
     assert is_busy is False
     print("  Step C: Match result stored and retrieved -> OK")
@@ -398,7 +398,7 @@ def test_smart_recognition_coordinator():
     # Verify cached prediction is STILL available for drawing green box at 30 FPS
     cached_pred, is_new2, _ = store.get_prediction()
     assert cached_pred is not None
-    assert cached_pred["employee_code"] == "NV001"
+    assert cached_pred["employee_code"] == "HS001"
     assert is_new2 is False, "Result already read, should not be marked new"
     print(f"  Step D: Cooldown {RECOGNITION_COOLDOWN_SECONDS}s holds lock & frees GIL during movement -> OK")
 

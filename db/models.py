@@ -5,7 +5,14 @@ Base = declarative_base()
 
 
 class Employee(Base):
-    """Compatibility table retained for existing attendance records and face IDs."""
+    """Bảng định danh kỹ thuật (tên lịch sử: ``employees``).
+
+    Mỗi học sinh trong ``students`` có đúng một dòng tương ứng tại đây (cùng mã
+    học sinh, ``department`` = tên lớp). Bảng được giữ vì cột
+    ``attendance_logs.employee_code`` (NOT NULL) có khóa ngoại trỏ tới bảng này;
+    nghiệp vụ và giao diện chỉ làm việc với ``students``. Không dùng trực tiếp
+    trong mã mới – xem db/database.create_student.
+    """
 
     __tablename__ = "employees"
 

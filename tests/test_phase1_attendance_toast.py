@@ -46,17 +46,17 @@ def test_toast_trigger_and_debounce():
         return True
 
     # Call 1: First success toast -> must succeed
-    res1 = trigger_attendance_toast("NV001", "success", "Check in success", icon="✅")
+    res1 = trigger_attendance_toast("HS001", "success", "Check in success", icon="✅")
     assert res1 is True, "First toast must be sent"
     assert len(toasts_sent) == 1
 
     # Call 2: Immediate duplicate -> must be debounced (False)
-    res2 = trigger_attendance_toast("NV001", "success", "Check in success", icon="✅")
+    res2 = trigger_attendance_toast("HS001", "success", "Check in success", icon="✅")
     assert res2 is False, "Duplicate toast within 5s must be blocked"
     assert len(toasts_sent) == 1
 
     # Call 3: Different event type (already_checked_in) -> must succeed
-    res3 = trigger_attendance_toast("NV001", "already_checked_in", "Already checked in", icon="⚠️")
+    res3 = trigger_attendance_toast("HS001", "already_checked_in", "Already checked in", icon="⚠️")
     assert res3 is True, "Different event type must be sent"
     assert len(toasts_sent) == 2
 
@@ -94,11 +94,11 @@ def test_first_vs_repeat_checkin_flow():
     # Step B: NV099 quét mặt lần thứ 2 trong cùng ngày -> can_check_in phải trả về False
     can_log_2, msg_2 = can_check_in(test_emp)
     assert can_log_2 is False, "Repeat check-in must be blocked!"
-    assert "already checked in" in msg_2.lower()
+    assert "đã điểm danh vào" in msg_2.lower()
     print(f"  Step B: Repeat check-in check -> BLOCKED as expected ({msg_2})")
 
     # Step C: Xác nhận nội dung cảnh báo tiếng Việt chuẩn xác
-    expected_warning = f"⚠️ Nhân viên {test_emp} đã thực hiện check-in rồi! Không thể check-in được nữa."
+    expected_warning = f"⚠️ Học sinh {test_emp} đã thực hiện check-in rồi! Không thể check-in được nữa."
     assert "đã thực hiện check-in rồi" in expected_warning
     print(f"  Step C: Warning message verified: '{expected_warning}'")
 

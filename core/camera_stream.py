@@ -204,7 +204,7 @@ def get_or_create_camera(
     return cap
 
 
-RECOGNITION_COOLDOWN_SECONDS = 3.0       # Giãn cách 3 giây khi đã nhận diện thành công một nhân viên
+RECOGNITION_COOLDOWN_SECONDS = 3.0       # Giãn cách 3 giây khi đã nhận diện thành công một học sinh
 RECOGNITION_UNKNOWN_RETRY_SECONDS = 1.5  # Giãn cách 1.5 giây khi chưa nhận diện được hoặc Unknown
 PREDICTION_INTERVAL_SECONDS = 0.25       # Tần suất tối thiểu giữa các lần trigger
 PREDICTION_POSITION_TOLERANCE = 20
@@ -613,7 +613,7 @@ def annotate_recognition(
     model_error: bool = False,
 ) -> Any:
     """
-    Vẽ khung nhận diện kèm thông tin nhân viên hoặc cảnh báo Unknown.
+    Vẽ khung nhận diện kèm thông tin học sinh hoặc cảnh báo Unknown.
     """
     annotated = frame.copy()
     for (x, y, w, h) in faces:

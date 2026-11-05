@@ -45,7 +45,7 @@ pages = {
         st.Page(PROJECT_ROOT / "pages" / "1_Dashboard.py", title="Trang tổng quan", icon=":material/dashboard:"),
     ],
     "QUẢN LÝ NHÀ TRƯỜNG": [
-        st.Page(PROJECT_ROOT / "pages" / "2_Employees.py", title="Quản lý học sinh", icon=":material/groups:"),
+        st.Page(PROJECT_ROOT / "pages" / "2_Students.py", title="Quản lý học sinh", icon=":material/groups:"),
         st.Page(PROJECT_ROOT / "pages" / "8_Classes.py", title="Quản lý lớp học và giáo viên", icon=":material/class:"),
     ],
     "ĐIỂM DANH": [
