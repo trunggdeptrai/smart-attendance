@@ -33,7 +33,7 @@ if errorlevel 1 (
 ".venv\Scripts\python.exe" -m pip install -r requirements.txt
 if errorlevel 1 (
     echo Cai dat requirements that bai.
-    echo Neu loi tai dlib, cai Visual Studio C++ Build Tools va CMake roi thu lai.
+    echo Kiem tra dang dung Python 3.11 64-bit va ket noi mang.
     exit /b 1
 )
 
@@ -43,4 +43,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo Cai dat hoan tat. Chay run.bat de mo ung dung.
+if not exist ".streamlit\secrets.toml" (
+    echo.
+    echo Dat tai khoan dang nhap cho ung dung:
+    ".venv\Scripts\python.exe" scripts\set_password.py
+    if errorlevel 1 (
+        echo Chua dat duoc mat khau. Chay lai: .venv\Scripts\python.exe scripts\set_password.py
+        exit /b 1
+    )
+)
+
+echo Cai dat hoan tat. Chay run.bat de mo ung dung va dang nhap.

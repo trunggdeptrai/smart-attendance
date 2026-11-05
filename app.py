@@ -29,6 +29,10 @@ st.set_page_config(
 )
 apply_custom_css()
 
+from core.auth import require_login  # noqa: E402
+
+require_login()
+
 ensure_runtime_directories()
 initialize_database()
 initialize_attendance_logs()

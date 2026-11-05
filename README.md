@@ -97,15 +97,14 @@ Chi tiết: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · thuật toán: [docs
 ├── check_environment.py      # Kiểm tra môi trường trước khi chạy
 ├── setup_windows.bat         # Cài đặt một lần trên Windows
 ├── INSTALL_WINDOWS.md        # Hướng dẫn cài đặt Windows chi tiết
-├── .devcontainer/            # Cấu hình Dev Container
 ├── .env.example              # Biến môi trường tùy chọn
-├── Dockerfile, docker-compose.yml, run.bat
+├── run.bat                   # Chạy ứng dụng trên Windows
 └── (sinh ra khi chạy, đã .gitignore) attendance.db, data/faces/, models/, backups/, research_logs/, research_results/
 ```
 
 ## Yêu cầu hệ thống
 
-- Windows 10/11 (đã kiểm thử Windows 11) hoặc Linux qua Docker.
+- Windows 10/11 (đã kiểm thử Windows 11).
 - Python **3.11.x 64-bit** (các phiên bản khác chưa được xác nhận). `dlib` dùng bản dựng sẵn `dlib-bin` nên **không cần** Visual Studio Build Tools hay CMake.
 - Camera (tùy chọn – có thể tải ảnh lên thay thế). Camera trình duyệt cần `localhost` hoặc HTTPS.
 - Không cần Internet khi chạy: mọi xử lý nhận diện thực hiện cục bộ.
@@ -125,12 +124,15 @@ python -m streamlit run app.py
 
 Cách nhanh trên Windows: chạy `setup_windows.bat` một lần rồi `run.bat`. Hướng dẫn chi tiết (Python 3.11, môi trường ảo, lỗi `dlib`, lỗi `arange: cannot compute length` do sai phiên bản NumPy): [INSTALL_WINDOWS.md](INSTALL_WINDOWS.md).
 
-Mở `http://localhost:8501`. Lần chạy đầu ứng dụng tự tạo `attendance.db` rỗng; tạo lớp → thêm học sinh → đăng ký khuôn mặt → huấn luyện mô hình.
+**Đặt tài khoản đăng nhập** (bắt buộc, một lần): `python scripts/set_password.py` → nhập tên (mặc định `admin`) và mật khẩu. Mật khẩu được lưu dạng băm trong `.streamlit/secrets.toml` (không đưa lên GitHub).
+
+Mở `http://localhost:8501` và đăng nhập. Lần chạy đầu ứng dụng tự tạo `attendance.db` rỗng; tạo lớp → thêm học sinh → đăng ký khuôn mặt → huấn luyện mô hình.
 
 Biến môi trường tùy chọn (xem `.env.example`; đặt trong PowerShell bằng `$env:TEN="giá trị"` trước khi chạy): `SMART_ATTENDANCE_DATA_ROOT`, `SMART_ATTENDANCE_DB`, `SMART_ATTENDANCE_RESEARCH_LOG`.
 
 ## Hướng dẫn sử dụng
 
+0. **Đăng nhập** bằng tài khoản quản trị; bấm **Đăng xuất** ở thanh bên khi dùng xong.
 1. **Quản lý lớp học và giáo viên:** tạo lớp, thêm giáo viên, chọn GVCN.
 2. **Quản lý học sinh:** thêm hồ sơ hoặc nhập Excel.
 3. **Đăng ký khuôn mặt:** chọn học sinh, chụp/tải 5–10 ảnh rõ mặt, nhiều góc nhẹ → **Huấn luyện mô hình**.
@@ -163,11 +165,11 @@ Hướng dẫn tổ chức ảnh kiểm thử và ý nghĩa chỉ số: [docs/RE
 python tests/run_all.py
 ```
 
-Trình chạy sao chép dữ liệu sang thư mục tạm và đặt `SMART_ATTENDANCE_DATA_ROOT`, nên kiểm thử **không ghi vào `attendance.db` thật** (các tệp kiểm thử cũ trước đây ghi trực tiếp vào DB thật). Kết quả gần nhất: 8/8 tệp đạt (04/11/2026, Windows 11, Python 3.11.9).
+Trình chạy sao chép dữ liệu sang thư mục tạm và đặt `SMART_ATTENDANCE_DATA_ROOT`, nên kiểm thử **không ghi vào `attendance.db` thật** (các tệp kiểm thử cũ trước đây ghi trực tiếp vào DB thật). Kết quả gần nhất: 11/11 tệp đạt (05/11/2026, Windows 11, Python 3.11.9).
 
 ## Triển khai
 
-Khuyến nghị: chạy **cục bộ trên máy tính của giáo viên** (không cần Internet, dữ liệu sinh trắc học không rời khỏi máy). Docker có sẵn cho máy chủ nội bộ. Đánh giá các nền tảng đám mây và hướng dẫn: [docs/DEPLOY.md](docs/DEPLOY.md).
+Khuyến nghị: chạy **cục bộ trên máy tính của giáo viên** (không cần Internet, dữ liệu sinh trắc học không rời khỏi máy). Bản demo trực tuyến chạy trên Streamlit Community Cloud. Hướng dẫn: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Cập nhật phiên bản
 
@@ -181,12 +183,13 @@ Khuyến nghị: chạy **cục bộ trên máy tính của giáo viên** (khôn
 - Ảnh khuôn mặt, vector đặc trưng và hồ sơ học sinh là **dữ liệu cá nhân nhạy cảm**. Chỉ thu thập khi có sự đồng ý bằng văn bản (với học sinh chưa thành niên: cha mẹ/người giám hộ) và đúng mục đích điểm danh/nghiên cứu.
 - `attendance.db`, `data/faces/`, `models/`, `backups/`, `research_logs/`, `research_results/` đã được loại trừ trong `.gitignore`. **Không** đưa lên GitHub hoặc kênh công khai.
 - Có chức năng xóa ảnh mẫu của từng học sinh và huấn luyện lại để loại vector khỏi mô hình.
-- Streamlit mặc định chỉ nghe `127.0.0.1`. Ứng dụng **chưa có đăng nhập/phân quyền** – không mở ra mạng trường hoặc Internet khi chưa có biện pháp kiểm soát truy cập.
+- **Đăng nhập bắt buộc**: một tài khoản quản trị, mật khẩu băm PBKDF2-SHA256 có salt, khóa 60 giây sau 5 lần sai; chưa đăng nhập thì mọi đường dẫn trang chỉ hiện form đăng nhập. Mật khẩu không có trong mã nguồn (đặt bằng `scripts/set_password.py` hoặc Secrets của Streamlit Cloud).
+- Streamlit mặc định chỉ nghe `127.0.0.1`. Chưa có phân quyền nhiều người dùng – không mở ra mạng trường khi chưa cần thiết.
 - Mô hình lưu bằng `pickle`: chỉ nạp tệp mô hình do chính ứng dụng tạo.
 
 ## Hạn chế hiện tại
 
-- Chưa có đăng nhập/phân quyền; tệp mô hình và ảnh mẫu chưa được mã hóa khi lưu.
+- Chỉ có một tài khoản quản trị, chưa phân quyền nhiều giáo viên; tệp mô hình và ảnh mẫu chưa được mã hóa khi lưu.
 - Phát hiện khuôn mặt bằng Haar Cascade nhạy với góc nghiêng lớn, ánh sáng yếu, khuôn mặt nhỏ.
 - Chưa có chống giả mạo (ảnh in, màn hình điện thoại).
 - Ngưỡng 0,48 và các tham số K-NN được chọn thủ công; **chưa được kiểm chứng bằng thực nghiệm có hệ thống** – đang được đánh giá bằng công cụ trong `research/`.
@@ -194,9 +197,10 @@ Khuyến nghị: chạy **cục bộ trên máy tính của giáo viên** (khôn
 
 ## Tác giả và đóng góp
 
-- **Tác giả:** Phạm Hoàng Trung – giáo viên Tin học, Trường THPT Tiên Lữ (Hưng Yên). Tác giả xây dựng phiên bản đầu tiên là hệ thống chấm công nhân viên bằng khuôn mặt (còn lại trong mã: bảng `employees`, mã `NV001`), sau đó phát triển thành hệ thống điểm danh học sinh: lớp, học sinh, giáo viên, lượt vào/ra có giáo viên xác nhận, báo cáo chuyên cần, migration dữ liệu.
-- **Phiên bản 1.1 (11/2026):** bổ sung công cụ nghiên cứu, sao lưu/khôi phục, cô lập kiểm thử, xóa dữ liệu khuôn mặt. Một phần mã và tài liệu được soạn với sự hỗ trợ của trợ lý AI (Claude) và đã được khai báo theo quy định.
-- Khi dùng làm sản phẩm dự án KHKT của học sinh, phần việc của từng học sinh được ghi trong nhật ký nghiên cứu của dự án, không suy ra từ lịch sử Git.
+- **Tác giả:** Phạm Hoàng Trung – giáo viên Tin học, Trường THPT Tiên Lữ (Hưng Yên).
+- **Cách phát triển: vibe coding** – tác giả tự xây dựng ứng dụng bằng cách lập trình cùng trợ lý AI: mô tả yêu cầu bằng ngôn ngữ tự nhiên, AI sinh mã, tác giả chạy thử, kiểm tra, sửa lỗi và quyết định giữ hay bỏ từng thay đổi. Phiên bản đầu là hệ thống chấm công nhân viên bằng khuôn mặt (còn lại trong mã: bảng `employees`, mã `NV001`), sau đó chuyển thành hệ thống điểm danh học sinh: lớp, học sinh, giáo viên, lượt vào/ra có giáo viên xác nhận, báo cáo chuyên cần.
+- **Phiên bản 1.1 (11/2026):** công cụ nghiên cứu, sao lưu/khôi phục, đăng nhập, cô lập kiểm thử, xóa dữ liệu khuôn mặt, chuyển sang `dlib-bin` – thực hiện cùng trợ lý AI Claude Code.
+- Việc sử dụng AI được khai báo theo quy định cuộc thi KHKT. Khi phần mềm được dùng làm sản phẩm dự án của học sinh, phần việc của từng học sinh được ghi trong nhật ký nghiên cứu, không suy ra từ lịch sử Git.
 
 ## Tài liệu tham khảo và giấy phép
 

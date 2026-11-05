@@ -40,7 +40,15 @@
 
    Nếu PowerShell chặn kích hoạt môi trường, có thể bỏ qua bước Activate và gọi trực tiếp `.\.venv\Scripts\python.exe` cho các lệnh còn lại. Không cần đổi execution policy.
 
-6. Kiểm tra môi trường và chạy ứng dụng:
+6. Đặt tài khoản đăng nhập (một lần; `setup_windows.bat` tự hỏi nếu chưa có):
+
+   ```powershell
+   .\.venv\Scripts\python.exe scripts\set_password.py
+   ```
+
+   Mật khẩu được lưu dạng băm trong `.streamlit\secrets.toml` – không chia sẻ, không đưa lên GitHub. Chạy lại lệnh này để đổi mật khẩu.
+
+7. Kiểm tra môi trường và chạy ứng dụng, sau đó đăng nhập:
 
    ```powershell
    .\.venv\Scripts\python.exe check_environment.py
