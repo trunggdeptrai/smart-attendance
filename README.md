@@ -198,7 +198,7 @@ Khuyến nghị: chạy **cục bộ trên máy tính của giáo viên** (khôn
 ## Tác giả và đóng góp
 
 - **Tác giả:** Phạm Hoàng Trung – giáo viên Tin học, Trường THPT Tiên Lữ (Hưng Yên).
-- **Cách phát triển: vibe coding** – tác giả tự xây dựng ứng dụng bằng cách lập trình cùng trợ lý AI: mô tả yêu cầu bằng ngôn ngữ tự nhiên, AI sinh mã, tác giả chạy thử, kiểm tra, sửa lỗi và quyết định giữ hay bỏ từng thay đổi. Phiên bản đầu là hệ thống chấm công nhân viên bằng khuôn mặt (còn lại trong mã: bảng `employees`, mã `NV001`), sau đó chuyển thành hệ thống điểm danh học sinh: lớp, học sinh, giáo viên, lượt vào/ra có giáo viên xác nhận, báo cáo chuyên cần.
+- **Cách phát triển: vibe coding** – tác giả tự xây dựng ứng dụng bằng cách lập trình cùng trợ lý AI **Claude** (Anthropic): mô tả yêu cầu bằng ngôn ngữ tự nhiên, AI sinh mã, tác giả chạy thử, kiểm tra, sửa lỗi và quyết định giữ hay bỏ từng thay đổi. Phiên bản đầu là hệ thống chấm công nhân viên bằng khuôn mặt (còn lại trong mã: bảng `employees`, mã `NV001`), sau đó chuyển thành hệ thống điểm danh học sinh: lớp, học sinh, giáo viên, lượt vào/ra có giáo viên xác nhận, báo cáo chuyên cần.
 - **Phiên bản 1.1 (11/2026):** công cụ nghiên cứu, sao lưu/khôi phục, đăng nhập, cô lập kiểm thử, xóa dữ liệu khuôn mặt, chuyển sang `dlib-bin` – thực hiện cùng trợ lý AI Claude Code.
 - Việc sử dụng AI được khai báo theo quy định cuộc thi KHKT. Khi phần mềm được dùng làm sản phẩm dự án của học sinh, phần việc của từng học sinh được ghi trong nhật ký nghiên cứu, không suy ra từ lịch sử Git.
 
