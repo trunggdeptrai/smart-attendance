@@ -8,7 +8,7 @@ Có 2 cách chạy Smart Attendance:
 | Cần Internet | Không | Có |
 | Lưu dữ liệu | Lâu dài, trên ổ cứng | Ổ đĩa tạm – **mất khi app ngủ/khởi động lại** |
 | Dữ liệu học sinh thật | Được (có phiếu đồng ý) | **Không** – chỉ dữ liệu demo |
-| Demo tại cuộc thi | Ổn định | Phụ thuộc mạng |
+| Trình diễn | Ổn định | Phụ thuộc mạng |
 
 Không dùng Vercel/Cloudflare: Streamlit cần máy chủ Python chạy liên tục.
 
@@ -24,7 +24,6 @@ Không dùng Vercel/Cloudflare: Streamlit cần máy chủ Python chạy liên t
 ## 2. Streamlit Community Cloud
 
 **Đã triển khai ngày 04/11/2026:** https://smart-attendance-demo.streamlit.app (nhánh `main`, Python 3.11). App tự cập nhật mỗi khi đẩy mã lên `main`.
-Không đưa đường dẫn này vào báo cáo IIIa/IIIb/poster (công văn cấm link, mã QR).
 
 Tạo lại từ đầu (nếu cần):
 1. Đăng nhập share.streamlit.io bằng tài khoản GitHub sở hữu repo.

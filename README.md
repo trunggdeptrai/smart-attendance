@@ -2,7 +2,7 @@
 
 Ứng dụng web hỗ trợ giáo viên điểm danh học sinh bằng nhận diện khuôn mặt. Kết quả nhận diện **chỉ là gợi ý**: giáo viên kiểm tra và xác nhận từng học sinh trước khi lưu; luôn có phương án điểm danh thủ công. Học sinh không được camera nhận diện **không** bị tự động tính là vắng mặt.
 
-> Phiên bản hiện tại được dùng làm sản phẩm của một dự án nghiên cứu khoa học kỹ thuật cấp THPT (năm học 2026–2027). Xem mục [Tác giả và đóng góp](#tác-giả-và-đóng-góp).
+Ứng dụng chạy cục bộ trên một máy tính phổ thông với webcam, không cần Internet; dữ liệu học sinh và ảnh khuôn mặt được lưu trên máy, có đăng nhập, sao lưu/khôi phục và công cụ đánh giá độ chính xác nhận diện.
 
 ## Mục lục
 
@@ -19,7 +19,7 @@
 - [Cập nhật phiên bản](#cập-nhật-phiên-bản)
 - [Bảo mật và quyền riêng tư](#bảo-mật-và-quyền-riêng-tư)
 - [Hạn chế hiện tại](#hạn-chế-hiện-tại)
-- [Tác giả và đóng góp](#tác-giả-và-đóng-góp)
+- [Tác giả](#tác-giả)
 - [Tài liệu tham khảo và giấy phép](#tài-liệu-tham-khảo-và-giấy-phép)
 
 ## Tính năng
@@ -70,8 +70,9 @@ Chi tiết: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · thuật toán: [docs
 
 ```text
 .
-├── app.py                    # Điểm khởi chạy, khởi tạo DB, menu điều hướng
+├── app.py                    # Điểm khởi chạy: đăng nhập, khởi tạo DB, menu điều hướng
 ├── core/
+│   ├── auth.py               # Đăng nhập (mật khẩu băm PBKDF2)
 │   ├── paths.py              # Đường dẫn dữ liệu (ghi đè bằng biến môi trường)
 │   ├── dataframes.py         # Bảng có schema cột ổn định
 │   ├── dashboard_data.py     # Dữ liệu trang tổng quan
@@ -88,7 +89,10 @@ Chi tiết: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · thuật toán: [docs
 ├── pages/                    # Các trang giao diện
 ├── research/
 │   └── evaluate_recognition.py   # Đánh giá offline: độ chính xác, nhận nhầm, thời gian, quét ngưỡng
-├── scripts/restore_backup.py # Khôi phục/kiểm tra bản sao lưu
+├── scripts/
+│   ├── set_password.py       # Đặt tài khoản đăng nhập
+│   └── restore_backup.py     # Tạo/kiểm tra/khôi phục bản sao lưu
+├── face_recognition/         # Mã nguồn thư viện face_recognition (MIT, bên thứ ba)
 ├── tests/                    # Kiểm thử; chạy bằng tests/run_all.py (cô lập dữ liệu)
 ├── docs/                     # Tài liệu kiến trúc, thuật toán, nghiên cứu, sao lưu, triển khai
 ├── ui/                       # CSS và component camera
@@ -165,7 +169,7 @@ Hướng dẫn tổ chức ảnh kiểm thử và ý nghĩa chỉ số: [docs/RE
 python tests/run_all.py
 ```
 
-Trình chạy sao chép dữ liệu sang thư mục tạm và đặt `SMART_ATTENDANCE_DATA_ROOT`, nên kiểm thử **không ghi vào `attendance.db` thật** (các tệp kiểm thử cũ trước đây ghi trực tiếp vào DB thật). Kết quả gần nhất: 11/11 tệp đạt (05/11/2026, Windows 11, Python 3.11.9).
+Trình chạy sao chép dữ liệu sang thư mục tạm và đặt `SMART_ATTENDANCE_DATA_ROOT`, nên kiểm thử **không ghi vào `attendance.db` thật**. Kết quả gần nhất: 11/11 tệp đạt (05/11/2026, Windows 11, Python 3.11.9).
 
 ## Triển khai
 
@@ -195,12 +199,11 @@ Khuyến nghị: chạy **cục bộ trên máy tính của giáo viên** (khôn
 - Ngưỡng 0,48 và các tham số K-NN được chọn thủ công; **chưa được kiểm chứng bằng thực nghiệm có hệ thống** – đang được đánh giá bằng công cụ trong `research/`.
 - Chỉ thiết kế cho một máy, một camera, dữ liệu cục bộ; chưa kiểm chứng ở quy mô toàn trường.
 
-## Tác giả và đóng góp
+## Tác giả
 
-- **Tác giả:** Phạm Hoàng Trung – giáo viên Tin học, Trường THPT Tiên Lữ (Hưng Yên).
-- **Cách phát triển: vibe coding** – tác giả tự xây dựng ứng dụng bằng cách lập trình cùng trợ lý AI **Claude** (Anthropic): mô tả yêu cầu bằng ngôn ngữ tự nhiên, AI sinh mã, tác giả chạy thử, kiểm tra, sửa lỗi và quyết định giữ hay bỏ từng thay đổi. Phiên bản đầu là hệ thống chấm công nhân viên bằng khuôn mặt (còn lại trong mã: bảng `employees`, mã `NV001`), sau đó chuyển thành hệ thống điểm danh học sinh: lớp, học sinh, giáo viên, lượt vào/ra có giáo viên xác nhận, báo cáo chuyên cần.
-- **Phiên bản 1.1 (11/2026):** công cụ nghiên cứu, sao lưu/khôi phục, đăng nhập, cô lập kiểm thử, xóa dữ liệu khuôn mặt, chuyển sang `dlib-bin` – thực hiện cùng trợ lý AI Claude Code.
-- Việc sử dụng AI được khai báo theo quy định cuộc thi KHKT. Khi phần mềm được dùng làm sản phẩm dự án của học sinh, phần việc của từng học sinh được ghi trong nhật ký nghiên cứu, không suy ra từ lịch sử Git.
+Phạm Hoàng Trung – giáo viên Tin học, Trường THPT Tiên Lữ (Hưng Yên).
+
+Phần mềm được phát triển với sự hỗ trợ của trợ lý lập trình AI Claude (Anthropic); từ phiên bản 1.1, các commit có AI tham gia được ghi nhận bằng dòng `Co-Authored-By` trong lịch sử Git. Bảng `employees` và mã `NV001` trong cơ sở dữ liệu là phần tương thích với phiên bản đầu (hệ thống chấm công nhân viên).
 
 ## Tài liệu tham khảo và giấy phép
 

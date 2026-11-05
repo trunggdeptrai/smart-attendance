@@ -3,14 +3,14 @@
 ## 1. Nguyên tắc
 
 - Không tạo, ước lượng hay “làm đẹp” số liệu. Mọi chỉ số được tính từ ảnh thật hoặc nhật ký thật.
-- Chỉ dùng ảnh của người đã ký phiếu đồng ý (Phụ lục IVd; học sinh chưa thành niên cần cha mẹ/người giám hộ ký).
+- Chỉ dùng ảnh của người đã ký phiếu đồng ý tham gia (học sinh chưa thành niên cần cha mẹ/người giám hộ ký).
 - Ảnh kiểm thử phải **khác** ảnh dùng để đăng ký (công cụ tự chặn ảnh trùng theo mã SHA-256).
-- Lưu ảnh kiểm thử ngoài thư mục mã nguồn (hoặc trong `data/eval/` – đã .gitignore). Không đưa vào báo cáo/poster.
+- Lưu ảnh kiểm thử ngoài thư mục mã nguồn (hoặc trong `data/eval/` – đã .gitignore). Không đưa ảnh khuôn mặt vào tài liệu công khai.
 
 ## 2. Tổ chức ảnh kiểm thử
 
 ```text
-D:\khkt_eval\
+D:\anh_kiem_thu\
 ├── sang_tu_nhien\          # điều kiện 1
 │   ├── HS003\  01.jpg 02.jpg ...
 │   ├── HS004\  ...
@@ -29,7 +29,7 @@ Thư mục mã phải trùng mã học sinh trong hệ thống. Người ngoài 
 python -m research.evaluate_recognition --loo --tag loo_lan1
 
 # Tập kiểm thử độc lập theo điều kiện
-python -m research.evaluate_recognition --eval-dir D:\khkt_eval --tag thuc_nghiem_lan1
+python -m research.evaluate_recognition --eval-dir D:\anh_kiem_thu --tag thuc_nghiem_lan1
 ```
 
 Kết quả: `research_results/<thời điểm>_<tag>/`
@@ -62,4 +62,4 @@ Kết quả: `research_results/<thời điểm>_<tag>/`
 
 ## 6. Bấm giờ quy trình điểm danh
 
-Thời gian điểm danh thủ công và bằng hệ thống được đo bằng đồng hồ bấm giờ theo biểu mẫu trong hồ sơ thực nghiệm (`05_THUC_NGHIEM/Bieu_mau_thu_thap_du_lieu.xlsx`).
+Thời gian điểm danh thủ công và bằng hệ thống được đo bằng đồng hồ bấm giờ và ghi vào bảng tính riêng (ngày, phương án, số học sinh, thời gian, số lỗi).

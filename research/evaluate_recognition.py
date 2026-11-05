@@ -30,7 +30,7 @@ Kết quả ghi vào research_results/<thời_điểm>/:
 
 Ví dụ:
   python -m research.evaluate_recognition --loo
-  python -m research.evaluate_recognition --eval-dir D:/khkt_test_images
+  python -m research.evaluate_recognition --eval-dir D:/anh_kiem_thu
 """
 
 import argparse
@@ -328,7 +328,7 @@ def main(argv=None):
     parser.add_argument("--manifest", help="CSV: file,true_code,condition (tuỳ chọn)")
     parser.add_argument("--allow-overlap", action="store_true", help="Cho phép ảnh kiểm thử trùng ảnh huấn luyện")
     parser.add_argument("--output-dir", default=str(RESEARCH_RESULT_DIR))
-    parser.add_argument("--tag", default="", help="Nhãn ngắn cho lần chạy, vd: lop11A8_lan1")
+    parser.add_argument("--tag", default="", help="Nhãn ngắn cho lần chạy, vd: lop_demo_lan1")
     args = parser.parse_args(argv)
 
     started = datetime.now()
