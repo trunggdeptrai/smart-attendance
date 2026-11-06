@@ -5,6 +5,13 @@
 ## [Chưa phát hành]
 
 ### Thêm mới
+- **Điểm danh tự động** (trang `pages/4_Attendance.py`, logic `core/auto_attendance.py`): hai chế độ ĐIỂM DANH VÀO / ĐIỂM DANH RA VỀ; chọn chế độ là camera tự bật, nhận diện liên tục và tự ghi vào cơ sở dữ liệu, không cần bấm xác nhận từng học sinh.
+  - Chỉ ghi khi cùng một học sinh được nhận ra ở 2 lần nhận diện liên tiếp (trong 8 giây) và khung hình có đúng 1 khuôn mặt; sau khi xử lý, bỏ qua học sinh đó 10 giây.
+  - Mỗi học sinh một lượt vào, một lượt ra trong mỗi buổi; ra về khi chưa có lượt vào → "CHƯA CÓ DỮ LIỆU ĐIỂM DANH VÀO"; ghi trùng bị chặn bởi kiểm tra trước khi ghi và chỉ mục duy nhất của SQLite.
+  - Bảng học sinh đã điểm danh trong buổi (STT, mã, họ tên, lớp, thời gian, trạng thái), lọc theo lớp, thống kê lấy trực tiếp từ cơ sở dữ liệu, tự làm mới 2 giây; âm thanh báo tùy chọn.
+  - Trang cũ được giữ nguyên chức năng, đổi tên thành **Điểm danh có xác nhận / thủ công** (`pages/13_Attendance_Manual.py`).
+- Giờ Việt Nam (`core/timeutil.py`, Asia/Ho_Chi_Minh) cho thời điểm ghi, ngày điểm danh, Tổng quan, Lịch sử và Báo cáo; hiển thị DD/MM/YYYY HH:mm.
+- Kiểm thử điểm danh tự động (`tests/test_auto_attendance.py`, 15 trường hợp).
 - `scripts/rename_student_code.py`: đổi mã một học sinh đồng bộ trên `students`, bảng định danh kỹ thuật, `attendance_logs`, thư mục ảnh mẫu và nhật ký; chạy thử mặc định, tự sao lưu khi thực hiện.
 - Kiểm thử xuất/nhập Excel (`tests/test_excel_io.py`) và công cụ đổi mã (`tests/test_rename_student_code.py`).
 

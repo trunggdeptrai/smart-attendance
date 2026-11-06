@@ -12,8 +12,9 @@ from core.dashboard_data import (
 )
 from db.attendance_repo import get_student_attendance_dataframe
 from db.database import get_classes, get_student_dataframe
+from core.timeutil import today_vn
 
-today = date.today()
+today = today_vn()
 students_df = get_student_dataframe()
 classes = get_classes()
 today_records, today_malformed_count, today_invalid_date_count = (

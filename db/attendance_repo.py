@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 
 from db.session import SessionLocal, engine, init_db
 from db.models import AttendanceLog, Employee, SchoolClass, Student
+from core.timeutil import now_vn, today_vn
 
 VALID_LOG_TYPES = {"IN", "OUT"}
 
@@ -21,11 +22,11 @@ def _normalize_log_type(log_type):
     return normalized_log_type
 
 def _normalize_timestamp(reference_time=None):
-    timestamp = reference_time or datetime.now()
+    timestamp = reference_time or now_vn()
     return timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
 def _normalize_date(reference_time=None):
-    timestamp = reference_time or datetime.now()
+    timestamp = reference_time or now_vn()
     return timestamp.strftime("%Y-%m-%d")
 
 def _row_to_dict(log_obj):
@@ -233,7 +234,7 @@ def record_student_attendance(
             date_value = date.fromisoformat(date_value).isoformat()
         except ValueError as error:
             raise ValueError("Ngày điểm danh không hợp lệ.") from error
-        if date.fromisoformat(date_value) > date.today():
+        if date.fromisoformat(date_value) > today_vn():
             raise ValueError("Không thể ghi nhận điểm danh cho ngày trong tương lai.")
         normalized_confidence = None if confidence is None else float(confidence)
         if normalized_confidence is not None and not 0 <= normalized_confidence <= 1:
@@ -300,7 +301,7 @@ def record_student_attendance(
                 attendance_status=status,
                 attendance_method=method,
                 confirmed=True,
-                log_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                log_time=now_vn().strftime("%Y-%m-%d %H:%M:%S"),
                 log_type=attendance_type,
                 camera_source="Nhận diện khuôn mặt" if method == "face" else "Giáo viên xác nhận",
                 confidence=normalized_confidence,

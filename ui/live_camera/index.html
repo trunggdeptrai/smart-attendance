@@ -492,9 +492,37 @@
           reportHeight();
         }
 
+        // Tiếng "bíp" ngắn khi điểm danh thành công (bật/tắt từ giao diện)
+        let lastBeepId = null;
+        let audioContext = null;
+        function beep() {
+          try {
+            audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            oscillator.type = "sine";
+            oscillator.frequency.value = 880;
+            gain.gain.setValueAtTime(0.15, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.25);
+            oscillator.connect(gain).connect(audioContext.destination);
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.25);
+          } catch (error) { /* trình duyệt chặn âm thanh: bỏ qua */ }
+        }
+        // iOS chỉ cho phát âm thanh sau một lần chạm: mở khóa AudioContext ở lần chạm đầu tiên
+        document.addEventListener("pointerdown", () => {
+          try {
+            audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+            if (audioContext.state === "suspended") audioContext.resume();
+          } catch (error) {}
+        }, { once: true });
+
         async function applyArgs(nextArgs) {
           args = nextArgs || {};
           overlays = Array.isArray(args.overlays) ? args.overlays : [];
+          const beepId = Number(args.beep_id) || 0;
+          if (lastBeepId !== null && beepId > lastBeepId && args.sound) beep();
+          lastBeepId = beepId;
           updateStatus();
           const active = Boolean(args.active);
           if (!active) {

@@ -1,6 +1,6 @@
 # Smart Attendance
 
-Ứng dụng web hỗ trợ giáo viên điểm danh học sinh bằng nhận diện khuôn mặt. Kết quả nhận diện **chỉ là gợi ý**: giáo viên kiểm tra và xác nhận từng học sinh trước khi lưu; luôn có phương án điểm danh thủ công. Học sinh không được camera nhận diện **không** bị tự động tính là vắng mặt.
+Ứng dụng web hỗ trợ giáo viên điểm danh học sinh bằng nhận diện khuôn mặt. Có hai cách điểm danh: **tự động** (chọn ĐIỂM DANH VÀO hoặc ĐIỂM DANH RA VỀ, camera tự bật, nhận diện liên tục và tự ghi khi cùng một học sinh được nhận ra ở nhiều khung hình liên tiếp) và **có xác nhận** (kết quả nhận diện là gợi ý, giáo viên xác nhận từng học sinh). Luôn có phương án điểm danh thủ công và điều chỉnh kết quả. Học sinh không được camera nhận diện **không** bị tự động tính là vắng mặt.
 
 Ứng dụng chạy cục bộ trên một máy tính phổ thông với webcam, không cần Internet; dữ liệu học sinh và ảnh khuôn mặt được lưu trên máy, có đăng nhập, sao lưu/khôi phục và công cụ đánh giá độ chính xác nhận diện.
 
@@ -30,7 +30,8 @@
 | Quản lý học sinh | Thêm/sửa/tìm kiếm, nhập Excel (`Họ và tên`, `Mã lớp`, `Ngày sinh` tùy chọn), xóa mềm hồ sơ |
 | Quản lý lớp học và giáo viên | Tạo/cập nhật lớp, hồ sơ giáo viên, giáo viên chủ nhiệm |
 | Đăng ký khuôn mặt | Chụp bằng camera trình duyệt hoặc tải ảnh (mỗi ảnh đúng 1 khuôn mặt), lưu ảnh cắt 200×200 vào `data/faces/<mã>/`, huấn luyện lại mô hình; **xóa dữ liệu khuôn mặt của một học sinh** |
-| Điểm danh nhận diện | Camera trực tiếp / chụp ảnh / tải ảnh; lượt vào – lượt ra; giáo viên xác nhận; điều chỉnh kết quả; điểm danh thủ công |
+| Điểm danh tự động | Hai chế độ ĐIỂM DANH VÀO / ĐIỂM DANH RA VỀ; camera tự bật, nhận diện liên tục, tự ghi vào cơ sở dữ liệu (cần 2 lần nhận diện liên tiếp cùng một học sinh); bảng học sinh đã điểm danh trong buổi, lọc theo lớp, thống kê; âm thanh báo tùy chọn |
+| Điểm danh có xác nhận / thủ công | Camera trực tiếp / chụp ảnh / tải ảnh; giáo viên xác nhận từng học sinh; điều chỉnh kết quả; điểm danh thủ công (dự phòng) |
 | Lịch sử điểm danh | Lọc theo ngày, lớp, học sinh, trạng thái; xuất CSV/Excel |
 | Báo cáo chuyên cần | Theo lớp/ngày/buổi; phân biệt “Chưa ghi nhận” và “Vắng mặt đã xác nhận”; xuất CSV/Excel |
 | Đánh giá thực nghiệm | Thống kê từ nhật ký nhận diện thực tế: tỷ lệ khớp, lý do từ chối, thời gian xử lý, quyết định của giáo viên; xem kết quả đánh giá offline |
@@ -40,9 +41,10 @@
 Cơ chế đảm bảo dữ liệu điểm danh:
 
 - **Chống điểm danh trùng:** kiểm tra trước khi ghi và chỉ mục duy nhất `(student_code, attendance_date, session_name, log_type)` trong SQLite.
-- **Lượt ra cần lượt vào trước**; học sinh đã xác nhận vắng không thể ghi lượt ra.
+- **Mỗi học sinh một lượt vào và một lượt ra trong mỗi buổi**; lượt ra cần lượt vào trước; học sinh đã xác nhận vắng không thể ghi lượt ra.
 - **Không cho ghi điểm danh cho ngày tương lai** (bổ sung ở phiên bản 1.1).
-- **Người không nhận diện được** hiển thị “Chưa nhận diện”, không tạo bản ghi.
+- **Người không nhận diện được** hiển thị “KHÔNG NHẬN DIỆN ĐƯỢC”, không tạo bản ghi; khung hình có nhiều khuôn mặt không được ghi.
+- **Giờ Việt Nam** (Asia/Ho_Chi_Minh) cho thời điểm ghi và ngày điểm danh, kể cả khi máy chủ (Streamlit Cloud) chạy giờ UTC.
 
 Hai trang `pages/6_Face_Detection.py` và `pages/7_Face_Recognition.py` là trang kiểm tra cũ dùng camera phía máy chủ (OpenCV); hiện **không có trong menu**.
 
@@ -155,7 +157,7 @@ Biến môi trường tùy chọn (xem `.env.example`; đặt trong PowerShell b
 1. **Quản lý lớp học và giáo viên:** tạo lớp, thêm giáo viên, chọn GVCN.
 2. **Quản lý học sinh:** thêm hồ sơ hoặc nhập Excel.
 3. **Đăng ký khuôn mặt:** chọn học sinh, chụp/tải 5–10 ảnh rõ mặt, nhiều góc nhẹ → **Huấn luyện mô hình**.
-4. **Điểm danh:** chọn lớp, ngày, buổi → camera/ảnh → kiểm tra mã, họ tên → **Xác nhận**. Không khớp → điểm danh thủ công.
+4. **Điểm danh tự động:** chọn buổi, camera → bấm **ĐIỂM DANH VÀO** (hoặc **ĐIỂM DANH RA VỀ** khi tan học) → từng học sinh đứng trước camera 1–2 giây, hệ thống tự ghi và báo kết quả. Bấm **Dừng camera** khi xong. Học sinh không nhận diện được → dùng trang **Điểm danh có xác nhận / thủ công**.
 5. **Lịch sử / Báo cáo:** lọc và xuất CSV/Excel.
 6. **Đánh giá thực nghiệm:** xem số liệu được ghi tự động trong quá trình sử dụng.
 7. **Cài đặt:** tạo bản sao lưu định kỳ.

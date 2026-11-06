@@ -6,6 +6,7 @@ import streamlit as st
 from core.attendance_export import build_attendance_excel
 from db.attendance_repo import get_student_attendance_summary_dataframe
 from db.database import get_classes, get_students
+from core.timeutil import today_vn
 
 st.title("Báo cáo chuyên cần")
 st.caption("Theo dõi giờ vào, giờ ra và trạng thái chuyên cần theo lớp.")
@@ -26,7 +27,7 @@ with filter_col1:
 with filter_col2:
     selected_date = st.date_input(
         "Ngày báo cáo",
-        value=date.today(),
+        value=today_vn(),
         format="DD/MM/YYYY",
     )
 with filter_col3:

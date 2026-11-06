@@ -49,7 +49,8 @@ pages = {
         st.Page(PROJECT_ROOT / "pages" / "8_Classes.py", title="Quản lý lớp học và giáo viên", icon=":material/class:"),
     ],
     "ĐIỂM DANH": [
-        st.Page(PROJECT_ROOT / "pages" / "4_Attendance.py", title="Điểm danh nhận diện khuôn mặt", icon=":material/face:"),
+        st.Page(PROJECT_ROOT / "pages" / "4_Attendance.py", title="Điểm danh tự động", icon=":material/face:"),
+        st.Page(PROJECT_ROOT / "pages" / "13_Attendance_Manual.py", title="Điểm danh có xác nhận / thủ công", icon=":material/fact_check:"),
         st.Page(PROJECT_ROOT / "pages" / "3_Register_Face.py", title="Đăng ký khuôn mặt học sinh", icon=":material/person_add:"),
         st.Page(PROJECT_ROOT / "pages" / "5_History.py", title="Lịch sử điểm danh", icon=":material/history:"),
         st.Page(PROJECT_ROOT / "pages" / "9_Attendance_Report.py", title="Báo cáo chuyên cần", icon=":material/analytics:"),
