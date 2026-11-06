@@ -18,8 +18,14 @@ def live_camera(
     key: str,
     capture_request_id: int = 0,
     capture_ack_id: int = 0,
+    face_hint: str = "",
     default: Optional[dict[str, Any]] = None,
 ) -> Optional[dict[str, Any]]:
+    """Component camera trình duyệt.
+
+    face_hint: dòng trạng thái hiển thị dưới khung hình khi thấy đúng 1 khuôn mặt
+    chưa có nhãn (mặc định: "đang nhận diện").
+    """
     return _COMPONENT(
         active=active,
         camera_index=camera_index,
@@ -27,6 +33,7 @@ def live_camera(
         restart_key=restart_key,
         capture_request_id=capture_request_id,
         capture_ack_id=capture_ack_id,
+        face_hint=face_hint,
         key=key,
         default=default,
     )

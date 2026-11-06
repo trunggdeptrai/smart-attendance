@@ -22,7 +22,10 @@ if st.session_state.get("register_face_camera_error"):
     st.session_state["register_face_stream_active"] = True
 
 st.title("Đăng ký khuôn mặt học sinh")
-st.caption("Ảnh mẫu và dữ liệu sinh trắc học được lưu cục bộ trong thư mục riêng của dự án.")
+st.caption(
+    "Trang này chụp và lưu ảnh mẫu khuôn mặt. Nhận diện và điểm danh thực hiện ở trang "
+    "“Điểm danh nhận diện khuôn mặt”. Ảnh mẫu được lưu cục bộ trong thư mục riêng của dự án."
+)
 
 students = get_students()
 if not students:
@@ -167,6 +170,7 @@ with capture_tab:
                 "register_face_capture_ack_id",
                 0,
             ),
+            face_hint="Đã thấy 1 khuôn mặt – bấm “Chụp và đăng ký” bên dưới để lưu ảnh mẫu.",
             key="register_face_live_camera",
         )
 

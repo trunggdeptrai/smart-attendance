@@ -11,7 +11,8 @@
       .viewport {
         position: relative;
         width: 100%;
-        aspect-ratio: 16 / 9;
+        aspect-ratio: var(--frame-ratio, 16 / 9);
+        touch-action: manipulation;
         overflow: hidden;
         border-radius: 10px;
         background: #101820;
@@ -22,7 +23,36 @@
         width: 100%;
         height: 100%;
       }
-      video { object-fit: cover; }
+      /* Chạm vào video không được mở trình phát gốc/toàn màn hình của iOS */
+      video { object-fit: cover; pointer-events: none; background: #101820; }
+      video::-webkit-media-controls,
+      video::-webkit-media-controls-start-playback-button,
+      video::-webkit-media-controls-panel { display: none !important; -webkit-appearance: none; }
+      .start-button {
+        position: absolute;
+        left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        padding: 12px 20px;
+        border: 0; border-radius: 10px;
+        color: #fff; background: #1e3a8a;
+        font: 600 16px system-ui, sans-serif;
+      }
+      .start-button[hidden] { display: none; }
+      .status {
+        margin-top: 8px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 15px; font-weight: 600;
+        background: #eef2ff; color: #1e3a8a;
+      }
+      .status.ok { background: #e7f8ef; color: #0f6b3e; }
+      .status.warn { background: #fff4e0; color: #8a5300; }
+      .status[hidden] { display: none; }
+      .notice {
+        margin-bottom: 8px; padding: 8px 12px; border-radius: 8px;
+        font-size: 14px; background: #fff4e0; color: #8a5300;
+      }
+      .notice[hidden] { display: none; }
       canvas { pointer-events: none; }
       .message {
         position: absolute;
@@ -50,18 +80,46 @@
   </head>
   <body>
     <div class="camera">
+      <div class="notice" hidden></div>
       <div class="viewport">
-        <video autoplay muted playsinline></video>
+        <video autoplay muted playsinline webkit-playsinline disablepictureinpicture
+               disableremoteplayback controlslist="nofullscreen nodownload noremoteplayback"></video>
         <canvas></canvas>
         <div class="fps">-- FPS</div>
         <div class="message">Bật camera để xem hình ảnh trực tiếp.</div>
+        <button class="start-button" type="button" hidden>Chạm để bắt đầu camera</button>
       </div>
+      <div class="status" hidden></div>
     </div>
     <script>
       (() => {
         const video = document.querySelector("video");
         const canvas = document.querySelector("canvas");
         const message = document.querySelector(".message");
+        const startButton = document.querySelector(".start-button");
+        const statusBar = document.querySelector(".status");
+        const notice = document.querySelector(".notice");
+        const viewport = document.querySelector(".viewport");
+
+        // iOS: bắt buộc phát trong trang, không mở trình phát toàn màn hình.
+        video.muted = true;
+        video.playsInline = true;
+        video.setAttribute("playsinline", "");
+        video.setAttribute("webkit-playsinline", "");
+        video.controls = false;
+        video.disablePictureInPicture = true;
+
+        // Trình duyệt nhúng trong ứng dụng (Zalo, Messenger, Facebook, Instagram, Line...)
+        // thường không cho phát video trong trang -> khuyên mở bằng Safari/Chrome.
+        const ua = navigator.userAgent || "";
+        const inAppBrowser = /FBAN|FBAV|FB_IAB|Instagram|Zalo|Line\/|MicroMessenger|Messenger|TikTok|wv\)/i.test(ua);
+        if (inAppBrowser) {
+          notice.textContent = "Bạn đang mở trang trong trình duyệt của ứng dụng khác. " +
+            "Nếu camera bị bật toàn màn hình hoặc đứng hình, hãy mở trang bằng Safari (iPhone) hoặc Chrome (Android).";
+          notice.hidden = false;
+        }
+        // Tỷ lệ khung hiển thị = tỷ lệ khung gửi đi nhận diện (giới hạn 3:4 .. 16:9)
+        let frameRatio = 16 / 9;
 
         // Đổi lỗi getUserMedia (tiếng Anh) thành hướng dẫn tiếng Việt cho giáo viên.
         function cameraErrorText(error) {
@@ -150,7 +208,54 @@
           pendingCaptureRequestId = 0;
           overlays = [];
           overlay.clearRect(0, 0, canvas.width, canvas.height);
+          startButton.hidden = true;
+          statusBar.hidden = true;
         }
+
+        function applyFrameRatio() {
+          if (!video.videoWidth || !video.videoHeight) return;
+          const raw = video.videoWidth / video.videoHeight;
+          frameRatio = Math.min(16 / 9, Math.max(3 / 4, raw));
+          viewport.style.setProperty("--frame-ratio", String(frameRatio));
+          reportHeight();
+        }
+
+        function reportHeight() {
+          const height = Math.ceil(document.querySelector(".camera").getBoundingClientRect().height) + 8;
+          window.parent.postMessage({
+            isStreamlitMessage: true,
+            type: "streamlit:setFrameHeight",
+            height: Math.max(260, height)
+          }, "*");
+        }
+
+        async function playVideo() {
+          try {
+            await video.play();
+            startButton.hidden = true;
+            return true;
+          } catch (error) {
+            // iOS có thể từ chối tự phát (vd Chế độ nguồn điện thấp): cần người dùng chạm.
+            startButton.hidden = false;
+            setMessage("", false);
+            return false;
+          }
+        }
+
+        startButton.addEventListener("click", async () => {
+          if (await playVideo()) {
+            sendStatus("Camera đang hoạt động.");
+          }
+        });
+        // iOS tạm dừng video khi chuyển ứng dụng/khoá màn hình: tự phát lại khi quay về.
+        video.addEventListener("pause", () => {
+          if (stream && document.visibilityState === "visible") void playVideo();
+        });
+        video.addEventListener("loadedmetadata", applyFrameRatio);
+        video.addEventListener("resize", applyFrameRatio);
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible" && stream && video.paused) void playVideo();
+        });
 
         async function openCamera(cameraIndex, restartKey) {
           stopCamera();
@@ -166,6 +271,7 @@
             const constraints = {
               audio: false,
               video: {
+                facingMode: { ideal: "user" },
                 width: { ideal: 1280 },
                 height: { ideal: 720 },
                 frameRate: { ideal: 30, max: 60 }
@@ -189,7 +295,24 @@
             }
 
             const initialTrack = selectedStream.getVideoTracks()[0];
-            if (initialTrack && initialTrack.getSettings().deviceId !== selectedDevice.deviceId) {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || "");
+            if (isMobile) {
+              // Điện thoại: thứ tự thiết bị khác nhau giữa các máy -> Camera 1 = trước, Camera 2 = sau.
+              const wantedFacing = Number(cameraIndex) === 1 ? "environment" : "user";
+              const currentFacing = initialTrack && initialTrack.getSettings().facingMode;
+              if (currentFacing !== wantedFacing) {
+                selectedStream.getTracks().forEach((track) => track.stop());
+                selectedStream = await navigator.mediaDevices.getUserMedia({
+                  audio: false,
+                  video: {
+                    facingMode: { ideal: wantedFacing },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    frameRate: { ideal: 30, max: 60 }
+                  }
+                });
+              }
+            } else if (initialTrack && initialTrack.getSettings().deviceId !== selectedDevice.deviceId) {
               selectedStream.getTracks().forEach((track) => track.stop());
               selectedStream = await navigator.mediaDevices.getUserMedia({
                 audio: false,
@@ -210,7 +333,8 @@
             selectedStream = null;
             activeCameraIndex = cameraIndex;
             video.srcObject = stream;
-            await video.play();
+            const playing = await playVideo();
+            applyFrameRatio();
             presentedFrames = 0;
             fpsWindowStarted = performance.now();
             if (video.requestVideoFrameCallback) {
@@ -218,7 +342,11 @@
             }
             setMessage("", false);
             timer = window.setInterval(sendFrame, frameIntervalMs);
-            sendStatus("Camera đang hoạt động.");
+            if (playing) {
+              sendStatus("Camera đang hoạt động.");
+            } else {
+              sendStatus("Camera đã sẵn sàng – chạm “Chạm để bắt đầu camera” trong khung hình.");
+            }
           } catch (error) {
             if (selectedStream) {
               selectedStream.getTracks().forEach((track) => track.stop());
@@ -269,7 +397,7 @@
           if (!video.videoWidth || !video.videoHeight) return null;
           const sourceWidth = video.videoWidth;
           const sourceHeight = video.videoHeight;
-          const targetRatio = 16 / 9;
+          const targetRatio = frameRatio;
           let cropWidth = sourceWidth;
           let cropHeight = sourceHeight;
           let sourceX = 0;
@@ -298,7 +426,7 @@
         }
 
         function sendFrame() {
-          if (!stream || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+          if (!stream || video.paused || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
               pendingCaptureRequestId) return;
           const image = drawCroppedFrame(
             captureCanvas,
@@ -338,9 +466,36 @@
           });
         }
 
+        function updateStatus() {
+          if (!stream || video.paused) {
+            statusBar.hidden = true;
+            return;
+          }
+          let text = args.status_text || "";
+          let tone = "";
+          if (!text) {
+            if (overlays.length === 0) {
+              text = "Đang tìm khuôn mặt… Đưa khuôn mặt vào giữa khung hình.";
+            } else if (overlays.length > 1) {
+              text = `Phát hiện ${overlays.length} khuôn mặt – chỉ để một người trước camera.`;
+              tone = "warn";
+            } else if (overlays[0].label) {
+              text = String(overlays[0].label);
+              tone = overlays[0].color === "#00d084" ? "ok" : "warn";
+            } else {
+              text = args.face_hint || "Đã thấy 1 khuôn mặt – đang nhận diện…";
+            }
+          }
+          statusBar.textContent = text;
+          statusBar.className = "status" + (tone ? " " + tone : "");
+          statusBar.hidden = false;
+          reportHeight();
+        }
+
         async function applyArgs(nextArgs) {
           args = nextArgs || {};
           overlays = Array.isArray(args.overlays) ? args.overlays : [];
+          updateStatus();
           const active = Boolean(args.active);
           if (!active) {
             stopCamera();
@@ -409,7 +564,7 @@
         window.parent.postMessage({
           isStreamlitMessage: true,
           type: "streamlit:setFrameHeight",
-          height: 410
+          height: 300
         }, "*");
         window.requestAnimationFrame(drawOverlay);
       })();

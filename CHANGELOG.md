@@ -9,6 +9,13 @@
 - Kiểm thử xuất/nhập Excel (`tests/test_excel_io.py`) và công cụ đổi mã (`tests/test_rename_student_code.py`).
 
 ### Sửa lỗi
+- **Camera trên điện thoại (iOS/Android):**
+  - Khung hình gửi đi nhận diện luôn bị cắt theo tỷ lệ 16:9; camera điện thoại cho ảnh dọc nên chỉ còn một dải ngang và mất khuôn mặt (kiểm chứng trên khung hình iPhone: cũ 0 khuôn mặt, mới phát hiện được). Nay cắt theo tỷ lệ thực của camera (giới hạn 3:4–16:9), khung hiển thị đổi tỷ lệ theo.
+  - iOS mở video toàn màn hình hoặc hiện trình phát gốc: thêm `webkit-playsinline`, tắt PiP/điều khiển, chặn chạm vào video.
+  - Video đứng khi iOS từ chối tự phát: hiện nút "Chạm để bắt đầu camera", tự phát lại khi quay lại trang, không gửi khung hình lúc video đang dừng.
+  - Cảnh báo khi mở trong trình duyệt nhúng của ứng dụng khác (Zalo, Messenger…), khuyên dùng Safari/Chrome.
+  - Điện thoại: Camera 1 = camera trước, Camera 2 = camera sau (máy tính giữ cách chọn theo thiết bị).
+  - Thanh trạng thái ngay dưới khung camera: đang tìm khuôn mặt / đang nhận diện / kết quả nhận diện / không xác định được danh tính / nhiều khuôn mặt.
 - Form điểm danh thủ công: khi đầu trang đang chọn "Điểm danh ra", đổi sang "Điểm danh vào" trong form vẫn không có lựa chọn "Vắng mặt" (form không chạy lại trang) → luôn hiển thị đủ 3 trạng thái; lượt ra + vắng mặt vẫn bị từ chối ở tầng dữ liệu.
 - Camera bị trình duyệt chặn quyền chỉ hiện "Permission denied" → hiển thị hướng dẫn tiếng Việt (cấp quyền hoặc dùng chế độ tải ảnh).
 

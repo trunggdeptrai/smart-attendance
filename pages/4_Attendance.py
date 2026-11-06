@@ -230,6 +230,10 @@ if source == "Camera trực tiếp":
             elif matched_code:
                 label = f"{matched_code} · Ngoài lớp đang chọn"
                 color = "#ffae42"
+            elif current_prediction is not None:
+                # Đã nhận diện xong nhưng không đủ tin cậy: báo rõ thay vì để trống.
+                label = "Không xác định được danh tính"
+                color = "#ffae42"
             overlay.append({
                 "x": face[0],
                 "y": face[1],
