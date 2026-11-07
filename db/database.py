@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 import pandas as pd
 import streamlit as st
@@ -243,12 +243,20 @@ def validate_student_fields(name, class_id):
 def _parse_date(value):
     if value in (None, ""):
         return None
-    if isinstance(value, date):
-        return value
-    try:
-        return date.fromisoformat(str(value))
-    except ValueError as error:
-        raise ValueError("Ngày sinh không hợp lệ.") from error
+    from core.birth_date import validate_birth_date
+
+    if isinstance(value, datetime):
+        value = value.date()
+    if not isinstance(value, date):
+        text = str(value).strip()
+        try:
+            value = date.fromisoformat(text[:10])
+        except ValueError:
+            try:
+                value = datetime.strptime(text, "%d/%m/%Y").date()
+            except ValueError as error:
+                raise ValueError("Ngày sinh không hợp lệ.") from error
+    return validate_birth_date(value)
 
 
 @st.cache_data(show_spinner=False)

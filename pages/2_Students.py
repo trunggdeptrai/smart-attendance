@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 from openpyxl.utils.exceptions import InvalidFileException
 
+from core.birth_date import DEFAULT_BIRTH_DATE, birth_date_input, compose_birth_date
 from db.database import (
     create_student,
     deactivate_student,
@@ -113,15 +114,11 @@ with tab_add:
                     f"{class_map[value].class_code} · {class_map[value].name}"
                 ),
             )
-            dob = st.date_input(
-                "Ngày sinh",
-                value=None,
-                min_value=None,
-                format="DD/MM/YYYY",
-            )
+            dob_parts = birth_date_input("Ngày sinh", DEFAULT_BIRTH_DATE, key="add_student_dob")
             submitted = st.form_submit_button("Thêm học sinh", type="primary")
         if submitted:
             try:
+                dob = compose_birth_date(*dob_parts)
                 code = create_student(name, class_id, dob)
                 st.success(f"Đã tạo hồ sơ học sinh {code}.")
                 st.rerun()
@@ -225,12 +222,10 @@ with tab_edit:
                     f"{class_map[value].class_code} · {class_map[value].name}"
                 ),
             )
-            edit_dob = st.date_input(
+            edit_dob_parts = birth_date_input(
                 "Ngày sinh",
-                value=selected.date_of_birth,
-                min_value=None,
-                format="DD/MM/YYYY",
-                key="edit_student_dob",
+                selected.date_of_birth,
+                key=f"edit_student_dob_{selected.id}",
             )
             edit_status = st.selectbox(
                 "Trạng thái",
@@ -248,6 +243,7 @@ with tab_edit:
             )
         if update_submitted:
             try:
+                edit_dob = compose_birth_date(*edit_dob_parts)
                 update_student(
                     selected.id,
                     edit_name,
