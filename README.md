@@ -1,233 +1,293 @@
-# Smart Attendance
+# SMART ATTENDANCE
 
-Ứng dụng web hỗ trợ giáo viên điểm danh học sinh bằng nhận diện khuôn mặt. Có hai cách điểm danh: **tự động** (chọn ĐIỂM DANH VÀO hoặc ĐIỂM DANH RA VỀ, camera tự bật, nhận diện liên tục và tự ghi khi cùng một học sinh được nhận ra ở nhiều khung hình liên tiếp) và **có xác nhận** (kết quả nhận diện là gợi ý, giáo viên xác nhận từng học sinh). Luôn có phương án điểm danh thủ công và điều chỉnh kết quả. Học sinh không được camera nhận diện **không** bị tự động tính là vắng mặt.
+**Hệ thống hỗ trợ quản lý và điểm danh học sinh bằng công nghệ nhận diện khuôn mặt ứng dụng trí tuệ nhân tạo.**
 
-Ứng dụng chạy cục bộ trên một máy tính phổ thông với webcam, không cần Internet; dữ liệu học sinh và ảnh khuôn mặt được lưu trên máy, có đăng nhập, sao lưu/khôi phục và công cụ đánh giá độ chính xác nhận diện.
+Phiên bản 1.2.0 · Python 3.11 · Streamlit · OpenCV · dlib · SQLite
 
 ## Mục lục
 
-- [Tính năng](#tính-năng)
-- [Công nghệ và kiến trúc](#công-nghệ-và-kiến-trúc)
-- [Cấu trúc thư mục](#cấu-trúc-thư-mục)
-- [Yêu cầu hệ thống](#yêu-cầu-hệ-thống)
-- [Cài đặt và chạy](#cài-đặt-và-chạy)
-- [Hướng dẫn sử dụng](#hướng-dẫn-sử-dụng)
-- [Công cụ nghiên cứu và đánh giá](#công-cụ-nghiên-cứu-và-đánh-giá)
-- [Sao lưu và khôi phục](#sao-lưu-và-khôi-phục)
-- [Kiểm thử](#kiểm-thử)
-- [Triển khai](#triển-khai)
-- [Cập nhật phiên bản](#cập-nhật-phiên-bản)
-- [Bảo mật và quyền riêng tư](#bảo-mật-và-quyền-riêng-tư)
-- [Hạn chế hiện tại](#hạn-chế-hiện-tại)
-- [Tác giả](#tác-giả)
-- [Tài liệu tham khảo và giấy phép](#tài-liệu-tham-khảo-và-giấy-phép)
+1. [Giới thiệu sản phẩm](#1-giới-thiệu-sản-phẩm)
+2. [Mục tiêu xây dựng](#2-mục-tiêu-xây-dựng)
+3. [Chức năng chính](#3-chức-năng-chính)
+4. [Đối tượng sử dụng](#4-đối-tượng-sử-dụng)
+5. [Công nghệ phát triển](#5-công-nghệ-phát-triển)
+6. [Kiến trúc hệ thống](#6-kiến-trúc-hệ-thống)
+7. [Cấu trúc thư mục](#7-cấu-trúc-thư-mục)
+8. [Quy trình nhận diện khuôn mặt](#8-quy-trình-nhận-diện-khuôn-mặt)
+9. [Quy trình điểm danh vào và ra về](#9-quy-trình-điểm-danh-vào-và-ra-về)
+10. [Quản lý học sinh và lớp học](#10-quản-lý-học-sinh-và-lớp-học)
+11. [Quản lý dữ liệu](#11-quản-lý-dữ-liệu)
+12. [Cài đặt trên Windows](#12-cài-đặt-trên-windows)
+13. [Khởi chạy ứng dụng](#13-khởi-chạy-ứng-dụng)
+14. [Hướng dẫn sử dụng](#14-hướng-dẫn-sử-dụng)
+15. [Sao lưu và khôi phục](#15-sao-lưu-và-khôi-phục)
+16. [Khắc phục sự cố](#16-khắc-phục-sự-cố)
+17. [Hướng phát triển](#17-hướng-phát-triển)
 
-## Tính năng
+---
 
-| Phân hệ (menu) | Chức năng đã kiểm tra trong mã nguồn |
+## 1. Giới thiệu sản phẩm
+
+Smart Attendance là ứng dụng web hỗ trợ giáo viên điểm danh học sinh bằng nhận diện khuôn mặt. Học sinh chỉ cần đứng trước camera trong 1–2 giây; hệ thống nhận diện, ghi nhận lượt điểm danh vào hoặc ra về và cập nhật ngay vào lịch sử điểm danh, thống kê chuyên cần.
+
+Ứng dụng chạy trên một máy tính phổ thông có webcam, không cần Internet trong quá trình sử dụng. Toàn bộ dữ liệu học sinh và ảnh khuôn mặt được lưu trên máy của nhà trường. Hệ thống có đăng nhập, sao lưu – khôi phục dữ liệu và bộ công cụ đánh giá độ chính xác nhận diện.
+
+## 2. Mục tiêu xây dựng
+
+- Rút ngắn thời gian điểm danh đầu và cuối buổi học so với gọi tên thủ công.
+- Hạn chế ghi nhận sai: chỉ ghi khi kết quả nhận diện ổn định qua nhiều khung hình, không tự ghi vắng cho học sinh chưa được nhận diện.
+- Hoạt động được với thiết bị sẵn có của nhà trường (máy tính, webcam, điện thoại).
+- Bảo vệ dữ liệu cá nhân: dữ liệu lưu cục bộ, có cơ chế xóa dữ liệu khuôn mặt và sao lưu có kiểm tra toàn vẹn.
+- Cung cấp số liệu đo được về độ tin cậy của nhận diện trong điều kiện lớp học thực tế.
+
+## 3. Chức năng chính
+
+| Phân hệ | Chức năng |
 |---|---|
-| Trang tổng quan | Số học sinh, số lớp, có mặt/đi muộn/vắng đã xác nhận; biểu đồ 7 ngày và theo lớp (Plotly) |
-| Quản lý học sinh | Thêm/sửa/tìm kiếm, nhập Excel (`Họ và tên`, `Mã lớp`, `Ngày sinh` tùy chọn), xóa mềm hồ sơ |
-| Quản lý lớp học và giáo viên | Tạo/cập nhật lớp, hồ sơ giáo viên, giáo viên chủ nhiệm |
-| Đăng ký khuôn mặt | Chụp bằng camera trình duyệt hoặc tải ảnh (mỗi ảnh đúng 1 khuôn mặt), lưu ảnh cắt 200×200 vào `data/faces/<mã>/`, huấn luyện lại mô hình; **xóa dữ liệu khuôn mặt của một học sinh** |
-| Điểm danh tự động | Hai chế độ ĐIỂM DANH VÀO / ĐIỂM DANH RA VỀ; camera tự bật, nhận diện liên tục, tự ghi vào cơ sở dữ liệu (cần 2 lần nhận diện liên tiếp cùng một học sinh); bảng học sinh đã điểm danh trong buổi, lọc theo lớp, thống kê; âm thanh báo tùy chọn |
-| Điểm danh có xác nhận / thủ công | Camera trực tiếp / chụp ảnh / tải ảnh; giáo viên xác nhận từng học sinh; điều chỉnh kết quả; điểm danh thủ công (dự phòng) |
-| Lịch sử điểm danh | Lọc theo ngày, lớp, học sinh, trạng thái; xuất CSV/Excel |
-| Báo cáo chuyên cần | Theo lớp/ngày/buổi; phân biệt “Chưa ghi nhận” và “Vắng mặt đã xác nhận”; xuất CSV/Excel |
-| Đánh giá thực nghiệm | Thống kê từ nhật ký nhận diện thực tế: tỷ lệ khớp, lý do từ chối, thời gian xử lý, quyết định của giáo viên; xem kết quả đánh giá offline |
-| Cài đặt | Tình trạng SQLite và mô hình; **tạo/tải bản sao lưu ZIP** |
-| Hướng dẫn sử dụng | Hướng dẫn thao tác, quyền camera, quyền riêng tư |
+| Đăng nhập | Tài khoản quản trị, mật khẩu băm PBKDF2-SHA256, khóa tạm sau 5 lần nhập sai |
+| Trang tổng quan | Số học sinh, số lớp, tình hình điểm danh trong ngày; biểu đồ 7 ngày và theo lớp |
+| Quản lý học sinh | Thêm, sửa, tìm kiếm; nhập danh sách từ Excel; ngừng theo dõi hồ sơ |
+| Quản lý lớp học và giáo viên | Tạo, cập nhật lớp; hồ sơ giáo viên; giáo viên chủ nhiệm |
+| Đăng ký khuôn mặt | Chụp bằng camera hoặc tải ảnh (mỗi ảnh đúng một khuôn mặt); huấn luyện mô hình; xóa dữ liệu khuôn mặt của từng học sinh |
+| Điểm danh tự động | Hai chế độ **ĐIỂM DANH VÀO** và **ĐIỂM DANH RA VỀ**; camera tự bật, nhận diện liên tục, tự ghi kết quả; bảng học sinh đã điểm danh trong buổi; lọc theo lớp; âm thanh báo tùy chọn |
+| Điểm danh có xác nhận / thủ công | Nhận diện qua camera, chụp ảnh hoặc tải ảnh; giáo viên xác nhận từng học sinh; điểm danh thủ công và điều chỉnh kết quả |
+| Lịch sử điểm danh | Lọc theo ngày, lớp, học sinh, trạng thái; xuất CSV, Excel |
+| Báo cáo chuyên cần | Thống kê theo lớp, ngày, buổi; phân biệt "chưa ghi nhận" và "vắng mặt đã xác nhận"; xuất CSV, Excel |
+| Đánh giá thực nghiệm | Thống kê từ nhật ký nhận diện: tỷ lệ khớp, lý do từ chối, thời gian xử lý |
+| Cài đặt | Tình trạng cơ sở dữ liệu và mô hình; tạo, tải bản sao lưu |
+| Hướng dẫn sử dụng | Hướng dẫn thao tác, cấp quyền camera, lưu ý về quyền riêng tư |
 
-Cơ chế đảm bảo dữ liệu điểm danh:
+Camera hoạt động trên trình duyệt máy tính và điện thoại (Safari trên iPhone, Chrome trên Android), có lựa chọn camera trước – camera sau.
 
-- **Chống điểm danh trùng:** kiểm tra trước khi ghi và chỉ mục duy nhất `(student_code, attendance_date, session_name, log_type)` trong SQLite.
-- **Mỗi học sinh một lượt vào và một lượt ra trong mỗi buổi**; lượt ra cần lượt vào trước; học sinh đã xác nhận vắng không thể ghi lượt ra.
-- **Không cho ghi điểm danh cho ngày tương lai** (bổ sung ở phiên bản 1.1).
-- **Người không nhận diện được** hiển thị “KHÔNG NHẬN DIỆN ĐƯỢC”, không tạo bản ghi; khung hình có nhiều khuôn mặt không được ghi.
-- **Giờ Việt Nam** (Asia/Ho_Chi_Minh) cho thời điểm ghi và ngày điểm danh, kể cả khi máy chủ (Streamlit Cloud) chạy giờ UTC.
+## 4. Đối tượng sử dụng
 
-Hai trang `pages/6_Face_Detection.py` và `pages/7_Face_Recognition.py` là trang kiểm tra cũ dùng camera phía máy chủ (OpenCV); hiện **không có trong menu**.
+- **Giáo viên chủ nhiệm, giáo viên bộ môn:** điểm danh, theo dõi chuyên cần, xuất báo cáo.
+- **Cán bộ quản lý, văn phòng nhà trường:** quản lý danh sách lớp, học sinh, tổng hợp số liệu.
+- **Học sinh tham gia nghiên cứu:** cài đặt, vận hành và đánh giá hệ thống theo kế hoạch nghiên cứu.
 
-## Công nghệ và kiến trúc
+## 5. Công nghệ phát triển
 
-| Thành phần | Công nghệ (phiên bản đã kiểm thử) |
+| Thành phần | Công nghệ |
 |---|---|
-| Ngôn ngữ | Python 3.11.x 64-bit (phiên bản triển khai được ghim) |
-| Giao diện web | Streamlit 1.55.0 (đa trang, `st.navigation`) + component camera HTML/JS (`ui/live_camera/`) |
-| Phát hiện khuôn mặt | OpenCV 4.13 – Haar Cascade `haarcascade_frontalface_default.xml` |
-| Trích xuất đặc trưng | `face_recognition` 1.3.0 (mã MIT sao chép trong `face_recognition/`) / dlib 20.0.1 bản dựng sẵn `dlib-bin` – vector 128 chiều (ResNet của dlib) |
-| Phân loại | K-NN có trọng số khoảng cách (K=3) + ngưỡng riêng từng học sinh + kiểm tra khoảng cách biên + đa số phiếu (`core/face_recognizer.py`) |
-| Lưu trữ | SQLite + SQLAlchemy 2.x; ảnh mẫu dạng tệp; mô hình dạng `pickle` + JSON |
-| Báo cáo | pandas 2.3.3, openpyxl 3.1.5, Plotly; NumPy 2.2.6 (giữ bản tương thích OpenCV/Python 3.11) |
+| Ngôn ngữ | Python 3.11 (64-bit) |
+| Giao diện web | Streamlit 1.55 (ứng dụng đa trang) và component camera HTML/JavaScript |
+| Phát hiện khuôn mặt | OpenCV 4.13 – bộ phân loại Haar Cascade |
+| Trích xuất đặc trưng | dlib 20.0.1 (bản dựng sẵn `dlib-bin`) và thư viện `face_recognition` – vector đặc trưng 128 chiều |
+| Phân loại | K-NN có trọng số khoảng cách (K = 3), ngưỡng riêng cho từng học sinh, kiểm tra khoảng cách biên, đa số phiếu |
+| Lưu trữ | SQLite, SQLAlchemy 2 |
+| Báo cáo, biểu đồ | pandas, openpyxl, Plotly |
+| Múi giờ | Giờ Việt Nam (Asia/Ho_Chi_Minh) |
+
+## 6. Kiến trúc hệ thống
 
 ```text
-Trình duyệt (camera)  ->  Streamlit pages/  ->  core/ (phát hiện, mã hóa, phân loại, xuất báo cáo, sao lưu, nhật ký)
-                                         \->  db/   (SQLAlchemy: lớp, học sinh, giáo viên, lượt điểm danh)
-Dữ liệu: attendance.db · data/faces/<mã>/ · models/ · backups/ · research_logs/ · research_results/
+Trình duyệt (camera máy tính / điện thoại)
+        │  khung hình JPEG
+        ▼
+Streamlit  ── pages/   (giao diện: điểm danh, quản lý, báo cáo, cài đặt)
+        │
+        ├── core/      (phát hiện, mã hóa, phân loại khuôn mặt; điểm danh tự động;
+        │               xác thực; xuất báo cáo; sao lưu; nhật ký đánh giá)
+        └── db/        (SQLAlchemy: lớp, học sinh, giáo viên, lượt điểm danh)
+                │
+                ▼
+Dữ liệu cục bộ: attendance.db · data/faces/ · models/ · backups/ · research_logs/
 ```
 
-Chi tiết: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · thuật toán: [docs/ALGORITHM.md](docs/ALGORITHM.md).
+Tài liệu chi tiết: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) (kiến trúc, mô hình dữ liệu), [docs/ALGORITHM.md](docs/ALGORITHM.md) (thuật toán nhận diện).
 
-### Mô hình dữ liệu
-
-Cấu trúc dữ liệu được tổ chức theo nghiệp vụ quản lý học sinh trong nhà trường:
-
-| Nhóm dữ liệu | Lưu trữ |
-|---|---|
-| Học sinh | Bảng `students` – mã học sinh dạng `HS001`, `HS002`… (tự sinh), họ tên, ngày sinh, lớp, trạng thái học tập |
-| Lớp học, giáo viên | Bảng `classes` (mã lớp, tên lớp, GVCN) và `teachers` |
-| Dữ liệu khuôn mặt | Ảnh mẫu `data/faces/<mã học sinh>/`; vector đặc trưng và ngưỡng nhận diện trong `models/` |
-| Điểm danh và lịch sử | Bảng `attendance_logs` – học sinh, lớp, ngày, buổi, lượt vào/ra, trạng thái, phương thức (nhận diện/thủ công), khoảng cách nhận diện |
-| Tài khoản hệ thống | Một tài khoản quản trị, mật khẩu băm trong `.streamlit/secrets.toml` hoặc Secrets của Streamlit Cloud |
-
-Các thành phần dữ liệu kế thừa từ phiên bản nền đã được rà soát và điều chỉnh để phù hợp với mô hình quản lý học sinh; chi tiết từng bảng (kể cả bảng kỹ thuật dùng cho khóa ngoại) trong [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
-## Cấu trúc thư mục
+## 7. Cấu trúc thư mục
 
 ```text
-.
-├── app.py                    # Điểm khởi chạy: đăng nhập, khởi tạo DB, menu điều hướng
-├── core/
-│   ├── auth.py               # Đăng nhập (mật khẩu băm PBKDF2)
-│   ├── paths.py              # Đường dẫn dữ liệu (ghi đè bằng biến môi trường)
-│   ├── dataframes.py         # Bảng có schema cột ổn định
-│   ├── dashboard_data.py     # Dữ liệu trang tổng quan
-│   ├── face_detect.py        # Phát hiện khuôn mặt (Haar Cascade)
-│   ├── face_dataset.py       # Đọc ảnh mẫu, tạo vector đặc trưng khi huấn luyện
-│   ├── face_recognizer.py    # Huấn luyện, hiệu chỉnh ngưỡng, phân loại, đo thời gian
-│   ├── save_face.py          # Cắt/lưu/xóa ảnh mẫu
-│   ├── camera_stream.py      # Luồng camera, nhận diện nền, làm mượt khung
-│   ├── live_camera.py        # Component camera trình duyệt
-│   ├── attendance_export.py  # Xuất Excel
-│   ├── backup.py             # Sao lưu/khôi phục ZIP
-│   └── research_log.py       # Nhật ký nghiên cứu (không lưu ảnh)
-├── db/                       # models.py, session.py (migration), database.py, attendance_repo.py
-├── pages/                    # Các trang giao diện
-├── research/
-│   └── evaluate_recognition.py   # Đánh giá offline: độ chính xác, nhận nhầm, thời gian, quét ngưỡng
-├── scripts/
-│   ├── set_password.py       # Đặt tài khoản đăng nhập
-│   ├── rename_student_code.py # Đổi mã học sinh đồng bộ toàn bộ dữ liệu (có sao lưu)
-│   └── restore_backup.py     # Tạo/kiểm tra/khôi phục bản sao lưu
-├── face_recognition/         # Mã nguồn thư viện face_recognition (MIT, bên thứ ba)
-├── tests/                    # Kiểm thử; chạy bằng tests/run_all.py (cô lập dữ liệu)
-├── docs/                     # Tài liệu kiến trúc, thuật toán, nghiên cứu, sao lưu, triển khai
-├── ui/                       # CSS và component camera
-├── requirements.txt          # Phụ thuộc (đã ghim phiên bản)
-├── requirements-dataset.txt  # Chỉ cho script tải dataset tùy chọn
-├── check_environment.py      # Kiểm tra môi trường trước khi chạy
-├── setup/                    # Bộ cài 1 lần bấm cho Windows (tự cài Python, thư viện, lối tắt)
-├── setup_windows.bat         # Cài đặt một lần trên Windows (khi đã có Python 3.11)
-├── INSTALL_WINDOWS.md        # Hướng dẫn cài đặt Windows chi tiết
-├── .env.example              # Biến môi trường tùy chọn
-├── run.bat                   # Chạy ứng dụng trên Windows
-└── (sinh ra khi chạy, đã .gitignore) attendance.db, data/faces/, models/, backups/, research_logs/, research_results/
+smart-attendance/
+├── app.py                  Điểm khởi chạy: đăng nhập, khởi tạo dữ liệu, menu
+├── pages/                  Các trang giao diện
+├── core/                   Xử lý nghiệp vụ
+│   ├── auto_attendance.py  Điểm danh tự động (đồng thuận nhiều khung hình, chống ghi trùng)
+│   ├── face_detect.py      Phát hiện khuôn mặt
+│   ├── face_recognizer.py  Huấn luyện, hiệu chỉnh ngưỡng, phân loại
+│   ├── camera_stream.py    Xử lý luồng camera, nhận diện nền
+│   ├── live_camera.py      Component camera trên trình duyệt
+│   ├── auth.py             Đăng nhập
+│   ├── backup.py           Sao lưu, khôi phục
+│   ├── research_log.py     Nhật ký đánh giá (không lưu ảnh)
+│   └── ...                 Đường dẫn, múi giờ, xuất báo cáo, dữ liệu tổng quan
+├── db/                     Mô hình dữ liệu, kết nối, nâng cấp cấu trúc, truy vấn điểm danh
+├── ui/                     Giao diện dùng chung và component camera
+├── research/               Công cụ đánh giá độ chính xác nhận diện
+├── scripts/                Đặt mật khẩu, khôi phục sao lưu, đổi mã học sinh
+├── tests/                  Bộ kiểm thử tự động
+├── docs/                   Tài liệu kỹ thuật
+├── face_recognition/       Mã nguồn thư viện face_recognition (giấy phép MIT)
+├── setup/                  Bộ cài đặt một lần bấm cho Windows
+├── data/faces/             Ảnh mẫu khuôn mặt (chỉ lưu trên máy, không đưa lên GitHub)
+├── requirements.txt        Danh sách thư viện (đã cố định phiên bản)
+├── check_environment.py    Kiểm tra môi trường
+├── setup_windows.bat       Cài đặt khi máy đã có Python 3.11
+├── run.bat                 Khởi chạy ứng dụng
+├── INSTALL_WINDOWS.md      Hướng dẫn cài đặt chi tiết
+└── CHANGELOG.md            Lịch sử phát triển
 ```
 
-## Yêu cầu hệ thống
+Các tệp sinh ra khi sử dụng (`attendance.db`, `data/faces/<mã>/`, `models/`, `backups/`, `research_logs/`, `.streamlit/secrets.toml`) chỉ nằm trên máy và được loại trừ khỏi GitHub.
 
-- Windows 10/11 (đã kiểm thử Windows 11).
-- Python **3.11.x 64-bit** (các phiên bản khác chưa được xác nhận). `dlib` dùng bản dựng sẵn `dlib-bin` nên **không cần** Visual Studio Build Tools hay CMake.
-- Camera (tùy chọn – có thể tải ảnh lên thay thế). Camera trình duyệt cần `localhost` hoặc HTTPS.
-- Không cần Internet khi chạy: mọi xử lý nhận diện thực hiện cục bộ.
+## 8. Quy trình nhận diện khuôn mặt
 
-## Cài đặt và chạy
+1. **Thu nhận ảnh:** khung hình từ camera trình duyệt, tự cắt theo tỷ lệ thực của camera (hỗ trợ ảnh dọc trên điện thoại).
+2. **Phát hiện khuôn mặt:** Haar Cascade xác định vị trí khuôn mặt trong khung hình.
+3. **Chuẩn hóa:** cắt vùng mặt kích thước 200×200, loại ảnh quá tối hoặc thiếu tương phản.
+4. **Trích xuất đặc trưng:** mạng ResNet của dlib tạo vector 128 chiều.
+5. **Phân loại:** so sánh với vector của học sinh đã đăng ký bằng K-NN có trọng số. Kết quả chỉ được chấp nhận khi đồng thời thỏa mãn ba điều kiện:
+   - khoảng cách nhỏ hơn ngưỡng riêng của học sinh đó (giới hạn 0,44–0,48);
+   - học sinh gần thứ hai cách xa ít nhất 0,04;
+   - đạt đa số phiếu K-NN.
+6. **Kết luận:** thỏa mãn → trả về mã học sinh; không thỏa mãn → "Không nhận diện được", không tạo bản ghi.
+
+## 9. Quy trình điểm danh vào và ra về
+
+| Bước | Điểm danh vào | Điểm danh ra về |
+|---|---|---|
+| 1 | Chọn buổi học, bấm **ĐIỂM DANH VÀO** | Bấm **ĐIỂM DANH RA VỀ** |
+| 2 | Camera tự bật, nhận diện liên tục | Camera tự bật, nhận diện liên tục |
+| 3 | Cùng một học sinh được nhận ra ở 2 lần liên tiếp (trong 8 giây, khung hình có đúng 1 khuôn mặt) | Như điểm danh vào |
+| 4 | Ghi lượt vào → "ĐIỂM DANH VÀO THÀNH CÔNG" | Kiểm tra đã có lượt vào → ghi lượt ra → "ĐIỂM DANH RA VỀ THÀNH CÔNG" |
+
+Quy tắc bảo đảm dữ liệu:
+
+- Mỗi học sinh có tối đa một lượt vào và một lượt ra trong mỗi buổi. Lượt lặp lại hiển thị "HỌC SINH ĐÃ ĐIỂM DANH" và không tạo bản ghi mới.
+- Lượt ra chỉ được ghi khi đã có lượt vào; nếu chưa có, hệ thống báo "CHƯA CÓ DỮ LIỆU ĐIỂM DANH VÀO".
+- Chống ghi trùng ở hai lớp: kiểm tra trước khi ghi và chỉ mục duy nhất trong cơ sở dữ liệu `(mã học sinh, ngày, buổi, lượt vào/ra)`.
+- Không ghi điểm danh cho ngày tương lai; học sinh chưa được nhận diện không bị tự động tính vắng.
+- Thời gian ghi theo giờ Việt Nam, hiển thị dạng DD/MM/YYYY HH:mm.
+
+Trang **Điểm danh có xác nhận / thủ công** là phương án dự phòng: giáo viên xác nhận từng kết quả nhận diện, ghi thủ công cho học sinh không nhận diện được và điều chỉnh kết quả đã lưu.
+
+## 10. Quản lý học sinh và lớp học
+
+- **Lớp học:** mã lớp, tên lớp, giáo viên chủ nhiệm.
+- **Học sinh:** mã học sinh tự sinh (`HS001`, `HS002`…), họ tên, ngày sinh, lớp, trạng thái học tập.
+- **Nhập từ Excel:** tệp có cột `Họ và tên`, `Mã lớp` và `Ngày sinh` (tùy chọn).
+- **Dữ liệu khuôn mặt:** mỗi học sinh 5–10 ảnh mẫu; có thể xóa ảnh mẫu của một học sinh và huấn luyện lại để loại học sinh đó khỏi mô hình.
+
+## 11. Quản lý dữ liệu
+
+| Dữ liệu | Vị trí lưu |
+|---|---|
+| Lớp, học sinh, giáo viên, lượt điểm danh | `attendance.db` (SQLite) |
+| Ảnh mẫu khuôn mặt | `data/faces/<mã học sinh>/` |
+| Vector đặc trưng, ngưỡng nhận diện | `models/` |
+| Nhật ký đánh giá nhận diện (không lưu ảnh) | `research_logs/` |
+| Bản sao lưu | `backups/` |
+| Tài khoản đăng nhập (mật khẩu đã băm) | `.streamlit/secrets.toml` |
+
+Ảnh khuôn mặt và hồ sơ học sinh là dữ liệu cá nhân nhạy cảm. Chỉ thu thập khi có sự đồng ý bằng văn bản của học sinh và cha mẹ hoặc người giám hộ, và chỉ dùng cho mục đích điểm danh, nghiên cứu. Các dữ liệu trên không được đưa lên GitHub hoặc kênh công khai.
+
+## 12. Cài đặt trên Windows
+
+**Yêu cầu:** Windows 10/11 64-bit, kết nối Internet ở lần cài đầu, ổ đĩa trống ít nhất 3 GB. Camera là tùy chọn (có thể tải ảnh thay thế).
+
+**Cách 1 – Bộ cài một lần bấm (khuyến nghị):**
+
+1. Tải mã nguồn dạng ZIP, giải nén vào `C:\SmartAttendance`.
+2. Mở thư mục `setup`, chạy `CAI_DAT_SMART_ATTENDANCE.bat`, chọn **Yes** khi Windows hỏi quyền quản trị.
+3. Bộ cài tự cài Python 3.11 (bản chính thức, có kiểm tra chữ ký số) nếu máy chưa có, cài thư viện, khởi tạo dữ liệu, đặt tài khoản đăng nhập, tạo lối tắt **Smart Attendance** trên Desktop và mở ứng dụng.
+
+**Cách 2 – Máy đã có Python 3.11:** chạy `setup_windows.bat` một lần.
+
+**Cách 3 – Cài thủ công:**
 
 ```powershell
-git clone https://github.com/trunggdeptrai/smart-attendance.git
-cd smart-attendance
 py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python check_environment.py
-python -m streamlit run app.py
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe check_environment.py --create-dirs --init-db
+.\.venv\Scripts\python.exe scripts\set_password.py
 ```
 
-Cách nhanh nhất trên Windows (dành cho học sinh): giải nén ZIP → mở thư mục `setup` → bấm đúp `CAI_DAT_SMART_ATTENDANCE.bat` → chọn **Yes** khi Windows hỏi quyền Administrator. Bộ cài tự cài Python 3.11 (bản chính thức từ python.org, có kiểm tra chữ ký số) nếu máy chưa có, cài thư viện, tạo cơ sở dữ liệu, hỏi mật khẩu, tạo lối tắt **Smart Attendance** trên Desktop và mở ứng dụng. Xem `setup/HUONG_DAN_CAI_DAT.txt`.
+Hướng dẫn chi tiết và các lỗi thường gặp: [INSTALL_WINDOWS.md](INSTALL_WINDOWS.md).
 
-Nếu đã có Python 3.11: chạy `setup_windows.bat` một lần rồi `run.bat`. Hướng dẫn chi tiết (Python 3.11, môi trường ảo, lỗi `dlib`, lỗi `arange: cannot compute length` do sai phiên bản NumPy): [INSTALL_WINDOWS.md](INSTALL_WINDOWS.md).
+## 13. Khởi chạy ứng dụng
 
-**Đặt tài khoản đăng nhập** (bắt buộc, một lần): `python scripts/set_password.py` → nhập tên (mặc định `admin`) và mật khẩu. Mật khẩu được lưu dạng băm trong `.streamlit/secrets.toml` (không đưa lên GitHub).
+- Bấm đúp lối tắt **Smart Attendance** trên Desktop hoặc tệp `run.bat`.
+- Trình duyệt mở địa chỉ `http://localhost:8501`; đăng nhập bằng tài khoản đã đặt khi cài.
+- Giữ cửa sổ dòng lệnh mở trong khi sử dụng; đóng cửa sổ này để tắt ứng dụng.
 
-Mở `http://localhost:8501` và đăng nhập. Lần chạy đầu ứng dụng tự tạo `attendance.db` rỗng; tạo lớp → thêm học sinh → đăng ký khuôn mặt → huấn luyện mô hình.
+Biến môi trường tùy chọn (xem `.env.example`): `SMART_ATTENDANCE_DATA_ROOT`, `SMART_ATTENDANCE_DB`, `SMART_ATTENDANCE_RESEARCH_LOG`.
 
-Biến môi trường tùy chọn (xem `.env.example`; đặt trong PowerShell bằng `$env:TEN="giá trị"` trước khi chạy): `SMART_ATTENDANCE_DATA_ROOT`, `SMART_ATTENDANCE_DB`, `SMART_ATTENDANCE_RESEARCH_LOG`.
+## 14. Hướng dẫn sử dụng
 
-## Hướng dẫn sử dụng
-
-0. **Đăng nhập** bằng tài khoản quản trị; bấm **Đăng xuất** ở thanh bên khi dùng xong.
-1. **Quản lý lớp học và giáo viên:** tạo lớp, thêm giáo viên, chọn GVCN.
-2. **Quản lý học sinh:** thêm hồ sơ hoặc nhập Excel.
-3. **Đăng ký khuôn mặt:** chọn học sinh, chụp/tải 5–10 ảnh rõ mặt, nhiều góc nhẹ → **Huấn luyện mô hình**.
-4. **Điểm danh tự động:** chọn buổi, camera → bấm **ĐIỂM DANH VÀO** (hoặc **ĐIỂM DANH RA VỀ** khi tan học) → từng học sinh đứng trước camera 1–2 giây, hệ thống tự ghi và báo kết quả. Bấm **Dừng camera** khi xong. Học sinh không nhận diện được → dùng trang **Điểm danh có xác nhận / thủ công**.
-5. **Lịch sử / Báo cáo:** lọc và xuất CSV/Excel.
-6. **Đánh giá thực nghiệm:** xem số liệu được ghi tự động trong quá trình sử dụng.
+1. **Quản lý lớp học và giáo viên:** tạo lớp, thêm giáo viên, chọn giáo viên chủ nhiệm.
+2. **Quản lý học sinh:** thêm hồ sơ hoặc nhập danh sách từ Excel.
+3. **Đăng ký khuôn mặt học sinh:** chọn học sinh, chụp hoặc tải 5–10 ảnh rõ mặt, góc nghiêng nhẹ khác nhau → **Huấn luyện mô hình**.
+4. **Điểm danh tự động:** chọn buổi học và camera → **ĐIỂM DANH VÀO** → từng học sinh đứng trước camera 1–2 giây. Cuối buổi chọn **ĐIỂM DANH RA VỀ**. Bấm **Dừng camera** khi kết thúc.
+5. **Điểm danh có xác nhận / thủ công:** dùng cho học sinh không nhận diện được hoặc khi cần điều chỉnh kết quả.
+6. **Lịch sử điểm danh, Báo cáo chuyên cần:** lọc dữ liệu và xuất CSV, Excel.
 7. **Cài đặt:** tạo bản sao lưu định kỳ.
 
-## Công cụ nghiên cứu và đánh giá
+## 15. Sao lưu và khôi phục
 
-- **Nhật ký tự động** (`research_logs/`): mỗi lần nhận diện ghi mã dự đoán, khoảng cách, ngưỡng, lý do từ chối, thời gian xử lý; mỗi lần giáo viên xác nhận/ghi thủ công/điều chỉnh. Không lưu ảnh hay vector.
-- **Đánh giá offline** (`research/evaluate_recognition.py`): so sánh thuật toán của ứng dụng với nhóm đối chứng 1-NN ngưỡng 0,6 trên cùng tập ảnh kiểm thử; tính tỷ lệ nhận đúng, nhận nhầm, từ chối sai, chấp nhận sai, thời gian; quét ngưỡng 0,30–0,70; tự chặn ảnh kiểm thử trùng ảnh huấn luyện.
+- **Trên giao diện:** Cài đặt → **Tạo bản sao lưu ngay**. Bản sao lưu là tệp ZIP gồm cơ sở dữ liệu (chụp nhất quán), ảnh mẫu, mô hình và nhật ký, kèm mã kiểm tra SHA-256.
+- **Bằng dòng lệnh:**
+
+  ```powershell
+  .\.venv\Scripts\python.exe scripts\restore_backup.py --create
+  .\.venv\Scripts\python.exe scripts\restore_backup.py --list
+  .\.venv\Scripts\python.exe scripts\restore_backup.py --verify <tệp zip>
+  .\.venv\Scripts\python.exe scripts\restore_backup.py <tệp zip>
+  ```
+
+- Khôi phục khi ứng dụng đã dừng; hệ thống luôn tạo bản an toàn của dữ liệu hiện tại trước khi khôi phục.
+- Khi nâng cấp phiên bản, cấu trúc cơ sở dữ liệu được cập nhật tự động và có bản sao trong `database_backups/`.
+
+Chi tiết: [docs/BACKUP_RESTORE.md](docs/BACKUP_RESTORE.md).
+
+## 16. Khắc phục sự cố
+
+| Hiện tượng | Cách xử lý |
+|---|---|
+| Camera không mở, báo chưa được cấp quyền | Cho phép camera trên thanh địa chỉ trình duyệt; đóng ứng dụng khác đang dùng camera; thử Camera 2 |
+| Camera trên iPhone không hiện hình | Mở bằng Safari (không mở trong Zalo, Messenger); chạm vào khung camera để bắt đầu |
+| Luôn báo "Không nhận diện được" | Kiểm tra học sinh đã có ảnh mẫu và đã huấn luyện mô hình; bảo đảm đủ sáng, mặt nhìn thẳng |
+| Báo "Nhiều khuôn mặt" | Chỉ để một học sinh trong khung hình |
+| Trình duyệt không tự mở | Mở `http://localhost:8501` bằng Chrome hoặc Edge |
+| Quên mật khẩu | Chạy `.\.venv\Scripts\python.exe scripts\set_password.py` để đặt mật khẩu mới |
+| Lỗi cài thư viện, lỗi `dlib` | Kiểm tra đang dùng Python 3.11 64-bit; chạy lại bộ cài khi mạng ổn định |
+| Lỗi `arange: cannot compute length` | Ứng dụng đang chạy bằng Python khác; luôn khởi chạy bằng `run.bat` |
+
+Kiểm tra môi trường: `.\.venv\Scripts\python.exe check_environment.py`. Danh sách lỗi đầy đủ: [INSTALL_WINDOWS.md](INSTALL_WINDOWS.md).
+
+## 17. Hướng phát triển
+
+- Phân quyền nhiều tài khoản giáo viên.
+- Mã hóa ảnh mẫu và tệp mô hình khi lưu trữ.
+- Chống giả mạo bằng ảnh in hoặc màn hình (kiểm tra chuyển động, chớp mắt).
+- Tự động xác định đi muộn theo khung giờ của từng buổi học.
+- Thử nghiệm bộ phát hiện khuôn mặt dựa trên học sâu, so sánh bằng công cụ đánh giá hiện có.
+- Mở rộng thực nghiệm ở nhiều lớp, nhiều điều kiện ánh sáng và thiết bị.
+
+---
+
+### Kiểm thử
 
 ```powershell
-python -m research.evaluate_recognition --loo                         # bỏ-ra-một trên ảnh mẫu đã đăng ký
-python -m research.evaluate_recognition --eval-dir D:\anh_kiem_thu --tag lan1
+.\.venv\Scripts\python.exe tests\run_all.py
 ```
 
-Hướng dẫn tổ chức ảnh kiểm thử và ý nghĩa chỉ số: [docs/RESEARCH_TOOLKIT.md](docs/RESEARCH_TOOLKIT.md).
+Bộ kiểm thử chạy trên bản sao dữ liệu tạm và tự xác nhận cơ sở dữ liệu thật không bị thay đổi.
 
-## Sao lưu và khôi phục
+### Hạn chế hiện tại
 
-- Giao diện: **Cài đặt → Tạo bản sao lưu ngay** → tệp `backups/smart_attendance_backup_<thời điểm>.zip` (DB chụp nhất quán bằng SQLite Backup API + ảnh mẫu + mô hình + nhật ký, kèm SHA-256).
-- Dòng lệnh: `python scripts/restore_backup.py --create` · `--list` · `--verify <zip>` · `<zip>` (khôi phục; luôn tạo bản an toàn trước).
-- Khôi phục khi **ứng dụng đã dừng**. Chi tiết: [docs/BACKUP_RESTORE.md](docs/BACKUP_RESTORE.md).
+- Một tài khoản quản trị; ảnh mẫu và mô hình chưa được mã hóa.
+- Haar Cascade nhạy với góc nghiêng lớn, ánh sáng yếu và khuôn mặt nhỏ ở xa.
+- Chưa có chống giả mạo bằng ảnh.
+- Các ngưỡng nhận diện được chọn từ thử nghiệm ban đầu, đang được đánh giá có hệ thống bằng công cụ trong `research/`.
+- Thiết kế cho quy mô một lớp học với một máy tính; chưa kiểm chứng ở quy mô toàn trường.
 
-## Kiểm thử
+### Tác giả và giấy phép
 
-```powershell
-python tests/run_all.py
-```
+Phạm Hoàng Trung – giáo viên Tin học, Trường THPT Tiên Lữ, tỉnh Hưng Yên. Quá trình phát triển có sử dụng công cụ hỗ trợ lập trình ứng dụng trí tuệ nhân tạo; các thay đổi có công cụ tham gia được ghi nhận trong lịch sử Git.
 
-Trình chạy sao chép dữ liệu sang thư mục tạm và đặt `SMART_ATTENDANCE_DATA_ROOT`, nên kiểm thử **không ghi vào `attendance.db` thật**. Kết quả gần nhất: 13/13 tệp đạt (05/11/2026, Windows 11, Python 3.11.9).
+Tài liệu tham khảo: Viola & Jones (2001), *Rapid object detection using a boosted cascade of simple features*, CVPR; King (2009), *Dlib-ml: A Machine Learning Toolkit*, JMLR 10.
 
-## Triển khai
+Thư viện bên thứ ba: `face_recognition` (MIT, xem `face_recognition/README_VENDORED.md`), OpenCV (Apache 2.0), Streamlit (Apache 2.0), dlib (Boost Software License), SQLAlchemy (MIT).
 
-Khuyến nghị: chạy **cục bộ trên máy tính của giáo viên** (không cần Internet, dữ liệu sinh trắc học không rời khỏi máy). Bản demo trực tuyến chạy trên Streamlit Community Cloud. Hướng dẫn: [docs/DEPLOY.md](docs/DEPLOY.md).
-
-## Cập nhật phiên bản
-
-1. Tạo bản sao lưu (Cài đặt hoặc `python scripts/restore_backup.py --create`).
-2. Dừng ứng dụng, `git pull`, `python -m pip install -r requirements.txt`.
-3. Khởi động lại; schema DB được nâng cấp tự động (có bản sao DB trong `database_backups/`).
-4. Xem [CHANGELOG.md](CHANGELOG.md).
-
-## Bảo mật và quyền riêng tư
-
-- Ảnh khuôn mặt, vector đặc trưng và hồ sơ học sinh là **dữ liệu cá nhân nhạy cảm**. Chỉ thu thập khi có sự đồng ý bằng văn bản (với học sinh chưa thành niên: cha mẹ/người giám hộ) và đúng mục đích điểm danh/nghiên cứu.
-- `attendance.db`, `data/faces/`, `models/`, `backups/`, `research_logs/`, `research_results/` đã được loại trừ trong `.gitignore`. **Không** đưa lên GitHub hoặc kênh công khai.
-- Có chức năng xóa ảnh mẫu của từng học sinh và huấn luyện lại để loại vector khỏi mô hình.
-- **Đăng nhập bắt buộc**: một tài khoản quản trị, mật khẩu băm PBKDF2-SHA256 có salt, khóa 60 giây sau 5 lần sai; chưa đăng nhập thì mọi đường dẫn trang chỉ hiện form đăng nhập. Mật khẩu không có trong mã nguồn (đặt bằng `scripts/set_password.py` hoặc Secrets của Streamlit Cloud).
-- Streamlit mặc định chỉ nghe `127.0.0.1`. Chưa có phân quyền nhiều người dùng – không mở ra mạng trường khi chưa cần thiết.
-- Mô hình lưu bằng `pickle`: chỉ nạp tệp mô hình do chính ứng dụng tạo.
-
-## Hạn chế hiện tại
-
-- Chỉ có một tài khoản quản trị, chưa phân quyền nhiều giáo viên; tệp mô hình và ảnh mẫu chưa được mã hóa khi lưu.
-- Phát hiện khuôn mặt bằng Haar Cascade nhạy với góc nghiêng lớn, ánh sáng yếu, khuôn mặt nhỏ.
-- Chưa có chống giả mạo (ảnh in, màn hình điện thoại).
-- Ngưỡng 0,48 và các tham số K-NN được chọn thủ công; **chưa được kiểm chứng bằng thực nghiệm có hệ thống** – đang được đánh giá bằng công cụ trong `research/`.
-- Chỉ thiết kế cho một máy, một camera, dữ liệu cục bộ; chưa kiểm chứng ở quy mô toàn trường.
-
-## Tác giả
-
-Phạm Hoàng Trung – giáo viên Tin học, Trường THPT Tiên Lữ (Hưng Yên).
-
-Phần mềm được phát triển với sự hỗ trợ của trợ lý lập trình AI Claude (Anthropic); từ phiên bản 1.1, các commit có AI tham gia được ghi nhận bằng dòng `Co-Authored-By` trong lịch sử Git.
-## Tài liệu tham khảo và giấy phép
-
-- King, D. E. (2009). Dlib-ml: A Machine Learning Toolkit. *Journal of Machine Learning Research*, 10, 1755–1758.
-- Viola, P., & Jones, M. (2001). Rapid object detection using a boosted cascade of simple features. *CVPR 2001*.
-- Thư viện `face_recognition` (Adam Geitgey, giấy phép MIT – 2 tệp được sao chép nguyên bản vào `face_recognition/` kèm LICENSE, xem `face_recognition/README_VENDORED.md`); OpenCV (Apache 2.0); Streamlit (Apache 2.0); dlib (Boost Software License); SQLAlchemy (MIT).
-
-© 2026 Phạm Hoàng Trung. Kho mã chưa áp dụng giấy phép mã nguồn mở; muốn sử dụng lại, vui lòng liên hệ tác giả. Các thư viện bên thứ ba tuân theo giấy phép riêng của từng thư viện.
+© 2026 Phạm Hoàng Trung. Kho mã chưa áp dụng giấy phép mã nguồn mở; việc sử dụng lại cần liên hệ tác giả.

@@ -25,7 +25,15 @@ Ràng buộc chống trùng: chỉ mục duy nhất có điều kiện `idx_stud
 
 Migration tự động tạo bản sao DB trong `database_backups/` trước khi nâng cấp schema.
 
-## Luồng điểm danh camera trực tiếp
+## Luồng điểm danh tự động (trang Điểm danh tự động)
+
+1. Giáo viên chọn chế độ ĐIỂM DANH VÀO hoặc ĐIỂM DANH RA VỀ → tạo phiên quét mới (`AutoAttendanceSession`, `core/auto_attendance.py`) và tự bật camera.
+2. Mỗi kết quả nhận diện mới đi qua `ConsensusTracker`: chỉ xác nhận khi cùng một mã học sinh xuất hiện ở 2 lần nhận diện liên tiếp trong 8 giây và khung hình có đúng 1 khuôn mặt.
+3. Mã đã xác nhận được bỏ qua 10 giây (cooldown) để không truy vấn, ghi lặp.
+4. `auto_record()` kiểm tra lịch sử trong buổi (đã có lượt vào/ra, lượt ra cần lượt vào, học sinh đã xác nhận vắng) rồi gọi `record_student_attendance()` – cùng hàm ghi với điểm danh thủ công; chỉ mục duy nhất của SQLite chặn ghi trùng khi có yêu cầu đồng thời.
+5. Bảng ghi nhận và thống kê trong buổi đọc trực tiếp từ cơ sở dữ liệu, tự làm mới mỗi 2 giây.
+
+## Luồng điểm danh có xác nhận (trang Điểm danh có xác nhận / thủ công)
 
 1. Component HTML/JS (`ui/live_camera/index.html`) lấy khung hình từ camera trình duyệt, gửi ảnh base64 về Streamlit.
 2. `detect_faces` (480 px) → nếu đúng 1 khuôn mặt, `get_or_update_prediction` khởi chạy thread nền gọi `predict_face` (được bọc `logged_predictor` để ghi nhật ký).

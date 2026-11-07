@@ -1,50 +1,71 @@
+# ============================================================
+# Smart Attendance - các tệp KHÔNG đưa lên GitHub
+# Dữ liệu học sinh, ảnh khuôn mặt, mô hình, mật khẩu và bản sao lưu
+# chỉ lưu trên máy sử dụng.
+# ============================================================
+
+# --- Môi trường Python và bộ nhớ đệm ---
 .venv*/
+venv/
 __pycache__/
-*/__pycache__/
-**/**/__pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Cơ sở dữ liệu (chứa thông tin học sinh) ---
 *.db
 *.db-*
-*.sqlite3
-*.sqlite3-*
 *.sqlite
 *.sqlite-*
-database_backups/
-.DS_Store
+*.sqlite3
+*.sqlite3-*
 
-# Temporary scratch scripts
-scratch*
-*.log
-
-# Local datasets and generated face images
+# --- Ảnh khuôn mặt, tập dữ liệu và mô hình nhận diện ---
 data/faces/*
 !data/faces/.gitkeep
+data/eval/
 dataset_faces/
-
-# Trained model artifacts
 models/
+*.pkl
+*.npy
+*.npz
 
-# Secrets and environment variables
+# --- Mật khẩu, khóa và biến môi trường ---
 .env
 .env.*
 !.env.example
 .streamlit/secrets.toml
+*.pem
+*.key
 
-# Database backups and local data
+# --- Bản sao lưu và dữ liệu sinh ra khi chạy ---
+backups/
+database_backups/
 attendance.backup*
 *.bak
 *.backup
-
-# Editor and operating system
-.vscode/
-.idea/
-Thumbs.db
-# Du lieu sinh ra khi chay (KHONG dua len GitHub: co the chua du lieu ca nhan)
-backups/
+*.zip
+*.rar
+*.7z
+*.bundle
+*.patch
 research_logs/
 research_results/
-data/eval/
-*.zip
+_LUU_TRU*/
+_BACKUP*/
+
+# --- Tệp tạm và nhật ký ---
+scratch*
+*.tmp
+*.log
+~$*
+
+# --- Trình soạn thảo và hệ điều hành ---
+.vscode/
+.idea/
 .claude/
+.DS_Store
+Thumbs.db
+desktop.ini

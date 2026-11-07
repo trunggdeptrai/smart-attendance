@@ -7,7 +7,7 @@
 - Không cần Visual Studio Build Tools/CMake: `requirements.txt` dùng bản dựng sẵn `dlib-bin` 20.0.1.
 - Camera chỉ cần thiết cho các luồng sử dụng camera; một số luồng cho phép tải ảnh thay thế.
 
-## Cách nhanh nhất: bộ cài 1 lần bấm
+## Cách nhanh nhất: bộ cài đặt một lần bấm
 
 1. Giải nén ZIP (chuột phải → **Extract All**), không chạy bên trong tệp ZIP.
 2. Mở thư mục `setup` → bấm đúp `CAI_DAT_SMART_ATTENDANCE.bat`.
@@ -82,17 +82,6 @@ Chạy lại bộ cài nhiều lần vẫn an toàn: không xóa dữ liệu, gi
 
 Hàm `init_db()` dùng `create_all` và các migration đã có; có thể chạy lặp lại. Khi phát hiện database cần migration, ứng dụng tạo backup trong `database_backups/` theo thiết kế hiện tại. Luôn sao lưu `attendance.db` và dừng ứng dụng trước khi chuyển dữ liệu hoặc cập nhật phiên bản. Không xóa database để xử lý lỗi.
 
-## Cài gói tải dataset tùy chọn
-
-`download_dataset.py` không cần để chạy điểm danh. Chỉ khi chủ dự án cần tải bộ dataset phát triển mới cài thêm:
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements-dataset.txt
-.\.venv\Scripts\python.exe .\download_dataset.py
-```
-
-Dataset tải xuống được lưu trong `dataset_faces/`, không phải thư mục ảnh học sinh `data/faces/`.
-
 ## Cập nhật mã nguồn mà không mất dữ liệu
 
 1. Dừng ứng dụng.
@@ -127,11 +116,10 @@ Migration hiện có được áp dụng khi khởi tạo. Nếu cập nhật nh
 
 ## Kiểm thử
 
-Từ thư mục dự án, chạy các kiểm thử ổn định độc lập (không cần cài pytest):
+Từ thư mục dự án, chạy toàn bộ bộ kiểm thử (không cần cài pytest):
 
 ```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s tests -p "test_stability.py" -v
-.\.venv\Scripts\python.exe tests\test_dashboard_data.py
+.\.venv\Scripts\python.exe tests\run_all.py
 ```
 
-Kiểm thử database dùng SQLite tạm trong thư mục temporary và không ghi dữ liệu kiểm thử vào `attendance.db`.
+Trình chạy sao chép dữ liệu sang thư mục tạm, chạy từng tệp kiểm thử và xác nhận `attendance.db` thật không bị thay đổi.

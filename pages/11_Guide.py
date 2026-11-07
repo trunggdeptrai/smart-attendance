@@ -18,11 +18,21 @@ with st.container(border=True):
     )
 
 with st.container(border=True):
-    st.subheader("3. Điểm danh và xác nhận")
+    st.subheader("3. Điểm danh tự động")
     st.markdown(
-        "Chọn lớp, ngày và buổi học; chụp ảnh bằng camera hoặc tải ảnh lên. "
-        "Kiểm tra mã, họ tên, lớp và khoảng cách nhận diện. Giáo viên cần xác nhận "
-        "từng kết quả; có thể ghi nhận thủ công hoặc đánh dấu vắng mặt."
+        "Mở **Điểm danh tự động**, chọn buổi học và camera, bấm **ĐIỂM DANH VÀO**. "
+        "Camera tự bật; từng học sinh đứng trước camera 1–2 giây, mỗi lần một người. "
+        "Hệ thống ghi nhận khi cùng một học sinh được nhận ra ở 2 lần liên tiếp và "
+        "hiển thị trong bảng học sinh đã điểm danh. Cuối buổi chọn **ĐIỂM DANH RA VỀ**; "
+        "lượt ra chỉ được ghi cho học sinh đã có lượt vào. Bấm **Dừng camera** khi kết thúc."
+    )
+
+with st.container(border=True):
+    st.subheader("4. Điểm danh có xác nhận và thủ công")
+    st.markdown(
+        "Mở **Điểm danh có xác nhận / thủ công** khi học sinh không nhận diện được hoặc "
+        "cần điều chỉnh kết quả: chụp ảnh hoặc tải ảnh lên, kiểm tra mã, họ tên, lớp và "
+        "xác nhận từng kết quả; có thể ghi nhận thủ công hoặc đánh dấu vắng mặt."
     )
     st.warning(
         "Không nhận diện được không có nghĩa là vắng mặt. Trạng thái vắng chỉ được "
@@ -30,7 +40,7 @@ with st.container(border=True):
     )
 
 with st.container(border=True):
-    st.subheader("4. Tra cứu báo cáo")
+    st.subheader("5. Tra cứu báo cáo")
     st.markdown(
         "Dùng **Lịch sử điểm danh** để lọc và xuất CSV/Excel; dùng **Báo cáo chuyên cần** "
         "để xem sĩ số, các trạng thái đã xác nhận và học sinh chưa ghi nhận."
@@ -39,9 +49,10 @@ with st.container(border=True):
 st.subheader("Khắc phục sự cố")
 st.markdown(
     """
-    - Nếu camera không hiển thị: kiểm tra quyền camera của trình duyệt và chọn HTTPS hoặc localhost.
+    - Nếu camera không hiển thị: kiểm tra quyền camera của trình duyệt và chọn HTTPS hoặc localhost. Trên iPhone, mở bằng Safari.
+    - Nếu báo nhiều khuôn mặt: chỉ để một học sinh trong khung hình.
     - Nếu chưa có mô hình: đăng ký ảnh, sau đó chọn **Huấn luyện mô hình**.
     - Nếu nhận diện sai: đăng ký thêm ảnh đúng học sinh, ánh sáng tốt; giáo viên có thể ghi nhận thủ công.
-    - Sao lưu `attendance.db`, `data/faces/` và `models/` ở nơi được bảo vệ trước khi chuyển máy.
+    - Tạo bản sao lưu tại **Cài đặt** trước khi cập nhật phiên bản hoặc chuyển máy.
     """
 )
