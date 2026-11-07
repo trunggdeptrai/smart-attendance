@@ -1,0 +1,4 @@
+# Script Windows can xuong dong CRLF (ke ca trong ZIP tai tu GitHub)
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

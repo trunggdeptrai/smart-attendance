@@ -116,7 +116,8 @@ Các thành phần dữ liệu kế thừa từ phiên bản nền đã được
 ├── requirements.txt          # Phụ thuộc (đã ghim phiên bản)
 ├── requirements-dataset.txt  # Chỉ cho script tải dataset tùy chọn
 ├── check_environment.py      # Kiểm tra môi trường trước khi chạy
-├── setup_windows.bat         # Cài đặt một lần trên Windows
+├── setup/                    # Bộ cài 1 lần bấm cho Windows (tự cài Python, thư viện, lối tắt)
+├── setup_windows.bat         # Cài đặt một lần trên Windows (khi đã có Python 3.11)
 ├── INSTALL_WINDOWS.md        # Hướng dẫn cài đặt Windows chi tiết
 ├── .env.example              # Biến môi trường tùy chọn
 ├── run.bat                   # Chạy ứng dụng trên Windows
@@ -143,7 +144,9 @@ python check_environment.py
 python -m streamlit run app.py
 ```
 
-Cách nhanh trên Windows: chạy `setup_windows.bat` một lần rồi `run.bat`. Hướng dẫn chi tiết (Python 3.11, môi trường ảo, lỗi `dlib`, lỗi `arange: cannot compute length` do sai phiên bản NumPy): [INSTALL_WINDOWS.md](INSTALL_WINDOWS.md).
+Cách nhanh nhất trên Windows (dành cho học sinh): giải nén ZIP → mở thư mục `setup` → bấm đúp `CAI_DAT_SMART_ATTENDANCE.bat` → chọn **Yes** khi Windows hỏi quyền Administrator. Bộ cài tự cài Python 3.11 (bản chính thức từ python.org, có kiểm tra chữ ký số) nếu máy chưa có, cài thư viện, tạo cơ sở dữ liệu, hỏi mật khẩu, tạo lối tắt **Smart Attendance** trên Desktop và mở ứng dụng. Xem `setup/HUONG_DAN_CAI_DAT.txt`.
+
+Nếu đã có Python 3.11: chạy `setup_windows.bat` một lần rồi `run.bat`. Hướng dẫn chi tiết (Python 3.11, môi trường ảo, lỗi `dlib`, lỗi `arange: cannot compute length` do sai phiên bản NumPy): [INSTALL_WINDOWS.md](INSTALL_WINDOWS.md).
 
 **Đặt tài khoản đăng nhập** (bắt buộc, một lần): `python scripts/set_password.py` → nhập tên (mặc định `admin`) và mật khẩu. Mật khẩu được lưu dạng băm trong `.streamlit/secrets.toml` (không đưa lên GitHub).
 

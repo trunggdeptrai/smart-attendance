@@ -5,6 +5,8 @@
 ## [Chưa phát hành]
 
 ### Thêm mới
+- **Bộ cài 1 lần bấm cho Windows** (`setup/CAI_DAT_SMART_ATTENDANCE.bat`, `setup/install.ps1`): tự xin quyền Administrator, cài Python 3.11.9 từ python.org nếu chưa có (kiểm tra chữ ký số), tạo `.venv`, cài thư viện, khởi tạo dữ liệu, đặt mật khẩu, tạo lối tắt Desktop và mở ứng dụng; báo lỗi rõ khi chưa giải nén ZIP, mất mạng, thiếu dung lượng.
+- `.gitattributes`: tệp `.bat`/`.ps1` luôn dùng xuống dòng CRLF, kể cả trong ZIP tải từ GitHub (trước đây `run.bat` trong ZIP dùng LF).
 - **Điểm danh tự động** (trang `pages/4_Attendance.py`, logic `core/auto_attendance.py`): hai chế độ ĐIỂM DANH VÀO / ĐIỂM DANH RA VỀ; chọn chế độ là camera tự bật, nhận diện liên tục và tự ghi vào cơ sở dữ liệu, không cần bấm xác nhận từng học sinh.
   - Chỉ ghi khi cùng một học sinh được nhận ra ở 2 lần nhận diện liên tiếp (trong 8 giây) và khung hình có đúng 1 khuôn mặt; sau khi xử lý, bỏ qua học sinh đó 10 giây.
   - Mỗi học sinh một lượt vào, một lượt ra trong mỗi buổi; ra về khi chưa có lượt vào → "CHƯA CÓ DỮ LIỆU ĐIỂM DANH VÀO"; ghi trùng bị chặn bởi kiểm tra trước khi ghi và chỉ mục duy nhất của SQLite.

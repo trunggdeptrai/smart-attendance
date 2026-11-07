@@ -7,7 +7,16 @@
 - Không cần Visual Studio Build Tools/CMake: `requirements.txt` dùng bản dựng sẵn `dlib-bin` 20.0.1.
 - Camera chỉ cần thiết cho các luồng sử dụng camera; một số luồng cho phép tải ảnh thay thế.
 
-## Cài mới từ tệp ZIP
+## Cách nhanh nhất: bộ cài 1 lần bấm
+
+1. Giải nén ZIP (chuột phải → **Extract All**), không chạy bên trong tệp ZIP.
+2. Mở thư mục `setup` → bấm đúp `CAI_DAT_SMART_ATTENDANCE.bat`.
+3. Nếu hiện "Windows protected your PC": **More info** → **Run anyway**; khi được hỏi quyền Administrator: **Yes**.
+4. Chờ 5–15 phút (cần Internet). Bộ cài tự: cài Python 3.11.9 từ python.org nếu chưa có (kiểm tra chữ ký số Python Software Foundation), tạo `.venv`, cài `requirements.txt`, khởi tạo dữ liệu, hỏi tên đăng nhập/mật khẩu, tạo lối tắt **Smart Attendance** trên Desktop và mở ứng dụng.
+
+Chạy lại bộ cài nhiều lần vẫn an toàn: không xóa dữ liệu, giữ mật khẩu đã đặt; `.venv` hỏng hoặc sai phiên bản được đổi tên thành `.venv_cu_<thời gian>` thay vì bị xóa.
+
+## Cài mới từ tệp ZIP (thủ công)
 
 1. Tải ZIP từ GitHub và giải nén vào thư mục người dùng có quyền ghi, ví dụ `C:\Users\<Tên>\Desktop\smart-attendance-main`.
 2. Mở PowerShell trong thư mục chứa `app.py`. Có thể mở thư mục trong Explorer, chọn thanh địa chỉ, nhập `powershell`, rồi nhấn Enter.
