@@ -18,6 +18,7 @@
 - Kiểm thử xuất/nhập Excel (`tests/test_excel_io.py`) và công cụ đổi mã (`tests/test_rename_student_code.py`).
 
 ### Sửa lỗi
+- Bộ cài `setup/`: ô mật khẩu không nhận phím (getpass của Python đọc bàn phím sai khi chạy lồng trong PowerShell quyền Administrator) → bộ cài tự hỏi mật khẩu bằng PowerShell (hiện dấu `*`), kiểm tra độ dài và gõ lại; `scripts/set_password.py` thêm `--username`, `--password-env` và kiểm tra tên đăng nhập. Chữ tiếng Việt in ra trong bộ cài không còn bị thành dấu `?`.
 - **Camera trên điện thoại (iOS/Android):**
   - Khung hình gửi đi nhận diện luôn bị cắt theo tỷ lệ 16:9; camera điện thoại cho ảnh dọc nên chỉ còn một dải ngang và mất khuôn mặt (kiểm chứng trên khung hình iPhone: cũ 0 khuôn mặt, mới phát hiện được). Nay cắt theo tỷ lệ thực của camera (giới hạn 3:4–16:9), khung hiển thị đổi tỷ lệ theo.
   - iOS mở video toàn màn hình hoặc hiện trình phát gốc: thêm `webkit-playsinline`, tắt PiP/điều khiển, chặn chạm vào video.

@@ -5,6 +5,11 @@
 
 param([switch]$NoShortcut, [switch]$NoLaunch)  # 2 tuy chon chi dung khi kiem thu
 $ErrorActionPreference = "Continue"
+# Hien dung tieng Viet khi Python in ra (neu khong se thanh dau ?)
+try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch {}
+$OutputEncoding = [Text.Encoding]::UTF8
+$env:PYTHONIOENCODING = "utf-8"
+$env:PYTHONUTF8 = "1"
 $PythonVersion = "3.11.9"
 $PythonUrl = "https://www.python.org/ftp/python/$PythonVersion/python-$PythonVersion-amd64.exe"
 
@@ -142,11 +147,35 @@ $secrets = Join-Path $Root ".streamlit\secrets.toml"
 if (Test-Path $secrets) {
     Write-Host "Da co tai khoan tu truoc - giu nguyen. (Doi mat khau: chay .venv\Scripts\python.exe scripts\set_password.py)"
 } else {
-    Write-Host "Dat ten dang nhap va mat khau cho ung dung (go mat khau se KHONG hien chu - binh thuong)."
-    do {
-        & $venvPy (Join-Path $Root "scripts\set_password.py")
-    } while ($LASTEXITCODE -ne 0 -and (Read-Host "Chua dat duoc mat khau. Thu lai? (C/k)") -ne "k")
-    if (-not (Test-Path $secrets)) { Loi "Chua dat mat khau. Chay lai tep cai dat." }
+    Write-Host "Dat ten dang nhap va mat khau cho ung dung."
+    Write-Host "Mat khau: it nhat 4 ky tu, nen TAT bo go tieng Viet (Unikey/EVKey) khi go. Moi phim hien thanh dau *."
+    $user = (Read-Host "Ten dang nhap (Enter = admin)").Trim()
+    if (-not $user) { $user = "admin" }
+    while ($user -notmatch '^[A-Za-z0-9_.@-]{1,64}$') {
+        Write-Host "Ten dang nhap chi gom chu khong dau, so va _ . @ -" -ForegroundColor Yellow
+        $user = (Read-Host "Ten dang nhap (Enter = admin)").Trim()
+        if (-not $user) { $user = "admin" }
+    }
+    $done = $false
+    for ($try = 1; $try -le 5 -and -not $done; $try++) {
+        $s1 = Read-Host "Mat khau moi" -AsSecureString
+        $s2 = Read-Host "Nhap lai mat khau" -AsSecureString
+        $p1 = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s1))
+        $p2 = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($s2))
+        if ($p1.Length -lt 4) {
+            Write-Host "Mat khau qua ngan (moi go $($p1.Length) ky tu, can it nhat 4). Thu lai." -ForegroundColor Yellow
+        } elseif ($p1 -cne $p2) {
+            Write-Host "Hai lan nhap khong giong nhau. Thu lai." -ForegroundColor Yellow
+        } else {
+            $env:SMART_ATTENDANCE_NEW_PASSWORD = $p1
+            & $venvPy (Join-Path $Root "scripts\set_password.py") --username $user --password-env SMART_ATTENDANCE_NEW_PASSWORD
+            $done = ($LASTEXITCODE -eq 0)
+            Remove-Item Env:\SMART_ATTENDANCE_NEW_PASSWORD -ErrorAction SilentlyContinue
+        }
+        $p1 = $null; $p2 = $null
+    }
+    if (-not $done -or -not (Test-Path $secrets)) { Loi "Chua dat duoc mat khau. Chay lai tep cai dat." }
+    Write-Host "Da dat tai khoan: $user"
 }
 # Bo qua cau hoi email cua Streamlit o lan chay dau (neu khong, cua so se dung cho nhap)
 $cred = Join-Path $env:USERPROFILE ".streamlit\credentials.toml"
