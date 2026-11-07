@@ -2,7 +2,8 @@ CÀI ĐẶT SMART ATTENDANCE – 1 LẦN BẤM (Windows 10/11 64-bit)
 =============================================================
 
 1. Giải nén tệp ZIP: chuột phải vào tệp ZIP -> "Extract All" (Giải nén tất cả)
-   -> chọn Desktop -> Extract. KHÔNG chạy trực tiếp bên trong tệp ZIP.
+   -> ở ô đường dẫn gõ C:\SmartAttendance -> Extract. KHÔNG chạy trực tiếp bên trong
+   tệp ZIP. Tránh thư mục có dấu tiếng Việt và thư mục OneDrive (hay gây lỗi).
 
 2. Mở thư mục vừa giải nén -> vào thư mục "setup"
    -> bấm đúp "CAI_DAT_SMART_ATTENDANCE.bat".

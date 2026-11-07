@@ -60,10 +60,10 @@ Write-Host "Thu muc du an: $Root"
 Buoc "Kiem tra may tinh va thu muc"
 if (-not [Environment]::Is64BitOperatingSystem) { Loi "Can Windows 64-bit. May nay la 32-bit nen khong cai duoc." }
 if (-not (Test-Path (Join-Path $Root "app.py"))) {
-    Loi "Khong thay app.py ben canh thu muc setup. Hay GIAI NEN toan bo tep ZIP (chuot phai -> Extract All) roi chay lai tu thu muc da giai nen, khong chay truc tiep trong tep ZIP."
+    Loi "Khong thay app.py ben canh thu muc setup. Hay GIAI NEN toan bo tep ZIP (chuot phai -> Extract All, chon C:\SmartAttendance) roi chay lai tu thu muc da giai nen, khong chay truc tiep trong tep ZIP."
 }
 if ($Root -match '\\Temp\\(Temp\d+_|Rar\$|7z)') {
-    Loi "Dang chay ben trong tep ZIP/thu muc tam. Hay giai nen ZIP ra Desktop (chuot phai -> Extract All) roi chay lai."
+    Loi "Dang chay ben trong tep ZIP/thu muc tam. Hay giai nen ZIP (chuot phai -> Extract All, chon C:\SmartAttendance) roi chay lai."
 }
 try {
     Get-ChildItem -Path $Root -Recurse -File -ErrorAction SilentlyContinue | Unblock-File -ErrorAction SilentlyContinue
