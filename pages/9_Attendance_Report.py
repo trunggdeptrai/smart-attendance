@@ -4,7 +4,16 @@ import pandas as pd
 import streamlit as st
 
 from core.attendance_export import build_attendance_excel
-from db.attendance_repo import get_student_attendance_summary_dataframe
+from core.attendance_stats import (
+    active_roster_codes,
+    compute_attendance_stats,
+    describe_scope,
+    filter_attendance_events,
+)
+from db.attendance_repo import (
+    get_student_attendance_dataframe,
+    get_student_attendance_summary_dataframe,
+)
 from db.database import get_classes, get_students
 from core.timeutil import today_vn
 
@@ -120,21 +129,54 @@ report = pd.DataFrame(
     ],
 )
 
-explicit_absent = int((report["Trạng thái"] == "Vắng mặt").sum())
-not_recorded = int((report["Trạng thái"] == "Chưa ghi nhận").sum())
-present = int((report["Trạng thái"] == "Có mặt").sum())
-late = int((report["Trạng thái"] == "Đi muộn").sum())
+# Thẻ thống kê đếm học sinh duy nhất trong cùng phạm vi lọc với bảng (ngày, lớp, buổi,
+# học sinh); bảng liệt kê theo từng buổi nên số dòng không phải là sĩ số.
+session_filter = None if selected_session == "Tất cả buổi" else selected_session
+events = filter_attendance_events(
+    get_student_attendance_dataframe(selected_date, selected_class_id),
+    student_code=selected_student_code,
+    session_name=session_filter,
+)
+roster_codes = active_roster_codes(roster)
+stats = compute_attendance_stats(roster_codes, events, records)
+inactive_listed = len({row.student_code for row in roster}) - stats["roster"]
 
 metrics = st.columns(5)
-metrics[0].metric("Sĩ số", len(report))
-metrics[1].metric("Có mặt", present)
-metrics[2].metric("Đi muộn", late)
-metrics[3].metric("Vắng mặt đã xác nhận", explicit_absent)
-metrics[4].metric("Chưa ghi nhận", not_recorded)
+metrics[0].metric(
+    "Sĩ số",
+    stats["roster"],
+    help="Số học sinh đang học trong phạm vi lọc (lớp, học sinh).",
+)
+metrics[1].metric("Có mặt", stats["by_status"]["Có mặt"])
+metrics[2].metric("Đi muộn", stats["by_status"]["Đi muộn"])
+metrics[3].metric("Vắng mặt đã xác nhận", stats["by_status"]["Vắng mặt"])
+metrics[4].metric(
+    "Chưa ghi nhận",
+    stats["unchecked"],
+    help="Số học sinh chưa có lượt ghi nhận nào trong phạm vi lọc.",
+)
+scope_text = describe_scope(
+    class_label=(
+        f"{class_map[selected_class_id].class_code} · {class_map[selected_class_id].name}"
+        if selected_class_id is not None else None
+    ),
+    attendance_date=selected_date,
+    student_label=(
+        f"{selected_student_code} · {roster_map[selected_student_code].full_name}"
+        if selected_student_code is not None else None
+    ),
+    session_label=selected_session,
+)
 st.caption(
-    "Học sinh thiếu lượt vào hoặc ra được hiển thị riêng; "
+    f"Phạm vi thống kê: {scope_text}. Các thẻ đếm học sinh duy nhất; bảng liệt kê theo "
+    f"từng buổi ({len(report)} dòng). Học sinh thiếu lượt vào hoặc ra được hiển thị riêng; "
     "chưa ghi nhận không đồng nghĩa với vắng."
 )
+if inactive_listed > 0:
+    st.caption(
+        f"Bảng có {inactive_listed} hồ sơ không còn đang học (tạm nghỉ, chuyển trường "
+        "hoặc đã xóa); các hồ sơ này không tính vào sĩ số."
+    )
 st.dataframe(report, width="stretch", hide_index=True)
 
 if report.empty:
